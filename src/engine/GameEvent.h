@@ -7,12 +7,13 @@ namespace ps = pokerstove;
 /*
  * GameEvent is the base class of all event types.
  *
- * Subclasses:
+ * subclass DealEvent:
  * - HoleCardDealEvent
  * - FlopDealEvent
  * - TurnDealEvent
  * - RiverDealEvent
  *
+ * subclass PlayerEvent:
  * - BetEvent
  * - RaiseEvent
  * - FoldEvent
@@ -38,7 +39,7 @@ private:
 };
 
 /*
- * A base class. Any event that is particular to a specific player.
+ * A base class. Any event performed by a specific player.
  */
 class PlayerEvent {
 private:
@@ -65,12 +66,17 @@ public:
   ps::Card getCard(int i) const { return _cards[i]; }
 
   static const int NUM_CARDS = n;
-}
+};
 
-class HoleCardDealEvent : public GameEvent, public DealEvent<2>, public PlayerEvent {
+class HoleCardDealEvent : public GameEvent, public DealEvent<2> {
+private:
+  player_id_t _player_id;
+
 public:
   HoleCardDealEvent(session_id_t session_id, player_id_t player_id, ps::Card cards[2]) :
-    GameEvent(session_id), DealEvent<2>(cards), PlayerEvent(player_id) {}
+    GameEvent(session_id), DealEvent<2>(cards), _player_id(player_id) {}
+  
+  player_id_t getPlayerID() const { return _player_id; }
 };
 
 class FlopDealEvent : public GameEvent, public DealEvent<3> {
