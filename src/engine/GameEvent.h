@@ -1,6 +1,7 @@
 #pragma once
 
 #include "pokerstove/peval/Card.h"
+#include "TypeDefs.h"
 
 namespace ps = pokerstove;
 
@@ -22,16 +23,19 @@ namespace ps = pokerstove;
  */
 class GameEvent {
 private:
-  uint64_t _id;  // unique across all GameEvent's
+  uint64_t _id;  // unique per-session
+  hand_id_t _hand_id;
   session_id_t _session_id;
 
 public:
-  GameEvent(session_id_t session_id) {
+  GameEvent(hand_id_t hand_id, session_id_t session_id) {
     this->_id = __next_id++;
+    this->_hand_id = hand_id;
     this->_session_id = session_id;
   }
 
   uint64_t getID() const { return _id; }
+  hand_id_t getHandID() const { return _hand_id; }
   session_id_t getSessionID() const { return _session_id; }
   
 private:
@@ -73,28 +77,29 @@ private:
   player_id_t _player_id;
 
 public:
-  HoleCardDealEvent(session_id_t session_id, player_id_t player_id, ps::Card cards[2]) :
-    GameEvent(session_id), DealEvent<2>(cards), _player_id(player_id) {}
+  HoleCardDealEvent(hand_id_t hand_id, session_id_t session_id, 
+      player_id_t player_id, ps::Card cards[2]) :
+    GameEvent(hand_id, session_id), DealEvent<2>(cards), _player_id(player_id) {}
   
   player_id_t getPlayerID() const { return _player_id; }
 };
 
 class FlopDealEvent : public GameEvent, public DealEvent<3> {
 public:
-  FlopDealEvent(session_id_t session_id, ps::Card cards[3]) :
-    GameEvent(session_id), DealEvent<3>(cards) {}
+  FlopDealEvent(hand_id_t hand_id, session_id_t session_id, ps::Card cards[3]) :
+    GameEvent(hand_id, session_id), DealEvent<3>(cards) {}
 };
 
 class TurnDealEvent : public GameEvent, public DealEvent<1> {
 public:
-  TurnDealEvent(session_id_t session_id, ps::Card card) :
-    GameEvent(session_id), DealEvent<3>(&card) {}
+  TurnDealEvent(hand_id_t hand_id, session_id_t session_id, ps::Card card) :
+    GameEvent(hand_id, session_id), DealEvent<3>(&card) {}
 };
 
 class RiverDealEvent : public GameEvent, public DealEvent<1> {
 public:
-  RiverDealEvent(session_id_t session_id, ps::Card card) :
-    GameEvent(session_id), DealEvent<3>(&card) {}
+  RiverDealEvent(hand_id_t hand_id, session_id_t session_id, ps::Card card) :
+    GameEvent(hand_id, session_id), DealEvent<3>(&card) {}
 };
 
 class BetEvent : public GameEvent, public PlayerEvent {
@@ -102,8 +107,8 @@ private:
   chip_amount_t _size;
 
 public:
-  BetEvent(session_id_t session_id, player_id_t player_id, chip_amount_t size) :
-    GameEvent(session_id), PlayerEvent(player_id), _size(size) {}
+  BetEvent(hand_id_t hand_id, session_id_t session_id, player_id_t player_id, chip_amount_t size) :
+    GameEvent(hand_id, session_id), PlayerEvent(player_id), _size(size) {}
 
   chip_amount_t getSize() const { return _size; }
 };
@@ -116,27 +121,27 @@ private:
   chip_amount_t _size;
 
 public:
-  RaiseEvent(session_id_t session_id, player_id_t player_id, chip_amount_t size) :
-    GameEvent(session_id), PlayerEvent(player_id), _size(size) {}
+  RaiseEvent(hand_id_t hand_id, session_id_t session_id, player_id_t player_id, chip_amount_t size) :
+    GameEvent(hand_id, session_id), PlayerEvent(player_id), _size(size) {}
 
   chip_amount_t getSize() const { return _size; }
 };
 
 class FoldEvent : public GameEvent, public PlayerEvent {
 public:
-  FoldEvent(session_id_t session_id, player_id_t player_id) :
-    GameEvent(session_id), PlayerEvent(player_id) {}
+  FoldEvent(hand_id_t hand_id, session_id_t session_id, player_id_t player_id) :
+    GameEvent(hand_id, session_id), PlayerEvent(player_id) {}
 };
 
 class CheckEvent : public GameEvent, public PlayerEvent {
 public:
-  CheckEvent(session_id_t session_id, player_id_t player_id) :
-    GameEvent(session_id), PlayerEvent(player_id) {}
+  CheckEvent(hand_id_t hand_id, session_id_t session_id, player_id_t player_id) :
+    GameEvent(hand_id, session_id), PlayerEvent(player_id) {}
 };
 
 class CallEvent : public GameEvent, public PlayerEvent {
 public:
-  CallEvent(session_id_t session_id, player_id_t player_id) :
-    GameEvent(session_id), PlayerEvent(player_id) {}
+  CallEvent(hand_id_t hand_id, session_id_t session_id, player_id_t player_id) :
+    GameEvent(hand_id, session_id), PlayerEvent(player_id) {}
 };
 
