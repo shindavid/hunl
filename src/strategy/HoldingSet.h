@@ -31,9 +31,9 @@ private:
     const uint16_t _suit_mask;
 
     // If a pocket-pair, _high_rank == _low_rank
-    // TODO: pack pokerstove::Rank to fit into 2 bits
-    const ps::Rank _high_rank : 2;
-    const ps::Rank _low_rank : 2;
+    // TODO: pack pokerstove::Rank to fit into 4 bits
+    const ps::Rank _high_rank : 4;
+    const ps::Rank _low_rank : 4;
     
     data_t(uint16_t suit_mask, ps::Rank high_rank, ps::Rank low_rank)
       : _suit_mask(suit_mask), _high_rank(high_rank), _low_rank(low_rank) {}
