@@ -16,7 +16,7 @@ private:
 public:
   /*
    * Default constructor intializes a uniform distribution over all (52-choose-2) possible holdings,
-   * collapsing suit-isomorphic holdings for maximum compactness.
+   * collapsing preflop-isomorphic holdings.
    */
   HoldingDistribution() {
     for (unsigned int r1=0; r1<ps::Rank::NUM_RANK; ++r1) {
