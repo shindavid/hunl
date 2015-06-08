@@ -67,53 +67,26 @@ public:
     0xf000  // SPADES,   2^12 + 2^13 + 2^14 + 2^15
   };
 
-  static uint16_t getHighMask(ps::Suit suit) {
-    // TODO: code() is private so below won't compile. Either unprivatize or use friend.
-    uint8_t code = suit.code();
-    return HIGH_MASKS[code];
-  }
-
-  static uint16_t getLowMask(ps::Suit suit) {
-    // TODO: code() is private so below won't compile. Either unprivatize or use friend.
-    uint8_t code = suit.code();
-    return LOW_MASKS[code];
-  }
+  static uint16_t getHighMask(ps::Suit suit);  // accessor of HIGH_MASKS
+  static uint16_t getLowMask(ps::Suit suit);  // accessor of LOW_MASKS
 
 public:
   /*
    * If pocket-pair, high_rank == low_rank
    */
-  HoldingSet(uint16_t suit_mask, ps::Rank high_rank, ps::Rank low_rank)
-    : _data(suit_mask, high_rank, low_rank)
-  {
-    assert(high_rank>=low_rank);
-    assert((high_rank!=low_rank) || !(suit_mask & ~POCKET_PAIR_MASK));
-  }
+  HoldingSet(uint16_t suit_mask, ps::Rank high_rank, ps::Rank low_rank);
 
-  bool operator=(const HoldingSet& hset) const {
-    return this->_hash == hset._hash;
-  }
-
+  bool operator=(const HoldingSet& hset) const { return this->_hash == hset._hash; }
   int getSize() const { return __builtin_popcount(_data._suit_mask); }
   bool empty() const { return !_data._suit_mask; }
 
   /*
-   * Remove all combinations of this that include the given card.
+   * Returns a HoldingSet representing this, but with all combinations that include the given card
+   * removed.
    *
    * Branchless operation.
    */
-  HoldingSet remove(ps::Card card) const {
-    ps::Rank rank = card.rank();
-    uint16_t high_mask = getHighMask(rank);
-    uint16_t low_mask = getLowMask(rank);
-
-    // should be branchless ternary operators
-    high_mask = (_data._high_rank == rank) ? high_mask : 0;
-    low_mask = (_data._low_rank == rank) ? low_mask : 0;
-
-    uint16_t suit_mask = _suit_mask & ~high_mask & ~low_mask;
-    return HoldingSet(suit_mask, _high_rank, _low_rank);
-  }
+  HoldingSet remove(ps::Card card) const;
 };
 static_assert(sizeof(HoldingSet)<=4);
 
