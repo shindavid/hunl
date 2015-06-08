@@ -96,3 +96,5 @@ struct HoldingSetHashFunction {
   }
 };
 
+#include "HoldingSetINLINES.cpp"
+
