@@ -31,6 +31,7 @@ public:
         _weights[unsuited] = unsuited.size();
       }
     }
+    _total_weight = 52*51/2;  // 52 choose 2
   }
 };
 
