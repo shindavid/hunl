@@ -90,7 +90,7 @@ public:
     assert((high_rank!=low_rank) || !(suit_mask & ~POCKET_PAIR_MASK));
   }
 
-  bool operator=(const HoldingSet& hset) {
+  bool operator=(const HoldingSet& hset) const {
     return this->_hash == hset._hash;
   }
 
