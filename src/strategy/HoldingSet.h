@@ -90,11 +90,5 @@ public:
 };
 static_assert(sizeof(HoldingSet)<=4);
 
-struct HoldingSetHashFunction {
-  uint64_t operator()(const HoldingSet& set) const {
-    return set.hash();
-  }
-};
-
 #include "HoldingSetINLINES.cpp"
 
