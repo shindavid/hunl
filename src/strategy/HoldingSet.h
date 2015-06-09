@@ -77,7 +77,7 @@ public:
   HoldingSet(uint16_t suit_mask, ps::Rank high_rank, ps::Rank low_rank);
 
   bool operator=(const HoldingSet& hset) const { return this->_hash == hset._hash; }
-  int getSize() const { return __builtin_popcount(_data._suit_mask); }
+  int size() const { return __builtin_popcount(_data._suit_mask); }
   bool empty() const { return !_data._suit_mask; }
 
   /*
