@@ -24,7 +24,9 @@ public:
     _high(high), _low(low) {}
 
   uint8_t code() const {
-    return (_high.code() * (_high.code()+1)) / 2 + _low.code();
+    uint8_t H = _high.code();
+    uint8_t L = _low.code();
+    return H*(H+1)/2 + L;
   }
 
   ps::Rank getHigh() const { return _high; }
