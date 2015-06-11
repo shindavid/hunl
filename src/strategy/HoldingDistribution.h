@@ -2,7 +2,9 @@
 
 #include "RankPair.h"
 #include "SuitMask.h"
-#include <unordered_map>
+#include "pokerstove/peval/Card.h"
+
+#include <exception>
 
 namespace ps = pokerstove;
 
@@ -43,6 +45,15 @@ public:
    * collapsing preflop-isomorphic holdings.
    */
   HoldingDistribution();
+
+  /*
+   * Removes all holdings that contains <card>.
+   */
+  void remove(ps::Card card) { throw std::exception("TODO"); }
+
+  void regroupOnFlop(SuitCounts counts);
+  void regroupOnTurn(SuitCounts counts);
+  void regroupOnRiver(SuitCounts counts);
 };
 
 #include "HoldingDistributionINLINES.cpp"
