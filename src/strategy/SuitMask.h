@@ -21,6 +21,7 @@ private:
   const uint16_t _mask;
   
 public:
+  SuitMask() : _mask(0) {}
   SuitMask(uint16_t mask) : _mask(mask) {}
   
   static const uint16_t SUITED_MASK = 0x8421;  // 2^0 + 2^5 + 2^10 + 2^15
@@ -46,6 +47,8 @@ public:
 
   SuitMask removeHigh(ps::Suit suit) const;
   SuitMask removeLow(ps::Suit suit) const;
+
+  uint8_t size() const { return __builtin_popcount(_mask); }
 };
 static_assert(sizeof(SuitMask)==2);
 
