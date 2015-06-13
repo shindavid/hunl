@@ -1,18 +1,18 @@
 // Included by Session.h
 
-SessionHand::SessionHand(chip_amount_t stack_size, bool button) {
-  _pot_size = 0;
-  _stack_sizes[0] = _stack_sizes[1] = stack_size;
-  _action_on = button;
-  _button = button;
-}
-
-Session::Session(Player* p0, Player* p1, chip_amount_t stack_size, uint64_t seed) {
+Session::Session(Player* p0, Player* p1, chip_amount_t stack_size, chip_amount_t small_blind_size,
+    chip_amount_t big_blind_size, uint64_t seed)
+{
   _id = __next_id++;
   _players[0] = p0;
   _players[1] = p1;
 
   _stack_size = stack_size;
+  _small_blind_size = small_blind_size;
+  _big_blind_size = big_blind_size;
+
+  assert(_small_blind_size <= _big_blind_size);
+  assert(_big_blind_size <= _stack_size);
 
   // srand() API is weird, passing in 1 gives you a weird error
   assert(seed>1);
@@ -21,77 +21,77 @@ Session::Session(Player* p0, Player* p1, chip_amount_t stack_size, uint64_t seed
   _button = rand() % 2;
 }
 
-void Session::playHand(HandResult& result) {
+void Session::_doBettingRound(SessionHand& hand) {
+  while (!hand.isCurrentBettingRoundDone()) {
+    seat_t seat = hand.getActionOn();
+    BettingDecision decision = _players[seat]->handleBettingDecisionRequest();
+    hand.handleEvent(seat, decision);
+  }
+}
+
+void Session::_init_hand() {
   _current_hand_id++;
   _button = !_button;
   
-  uint64_t seed = _base_seed + _current_hand_id + 1;
+  uint64_t seed = _base_seed + _current_hand_id;
   srand(seed);
   _deck.shuffle();
+}
 
-  SessionHand hand(_stack_size, _button);
-
+void _main_loop(SessionHand& hand) {
   // Pre-deal cards before any of the Player's start calling rand()
-  ps::CardSet holding0 = _deck.deal(2);
-  ps::CardSet holding1 = _deck.deal(2);
+  ps::Card holdings[2][2];
+  ps::Card flop[3];
+  ps::Card turn;
+  ps::Card river;
 
-  ps::CardSet flop = _deck.deal(3);
-  ps::CardSet turn = _deck.deal(1);
-  ps::CardSet river = _deck.deal(1);
+  for (int p=0; p<2; ++p) {
+    for (int i=0; i<2; ++i ) {
+      holdings[p][i] = _deck.deal();
+    }
+  }
+  for (int i=0; i<3; ++i ) {
+    flop[i] = _deck.deal();
+  }
+  turn = _deck.deal();
+  river = _deck.deal();
 
-  HoleCardDealEvent hole_card_event0(_current_hand_id, _id, _players[0]->getID(), holding0);
-  _players[0].handleEvent(hole_card_event0);
-  hand.handleEvent(0, hole_card_event0);
-
-  HoleCardDealEvent hole_card_event1(_current_hand_id, _id, _players[1]->getID(), holding1);
-  _players[1].handleEvent(hole_card_event1);
-  hand.handleEvent(1, hole_card_event2);
-
-  hand.handleEvent(_button, _players[_button].requestSmallBlindPost());
-  hand.handleEvent(!_button, _players[!_button].requestBigBlindPost());
-
-  while (hand.isActive()) {
-    bool action_on = hand.getActionOn();
-    PlayerEvent event = _players[action_on]->handleActionRequest();
-    if (hand.handleEvent(action_on, event)) break;
+  for (int p=0; p<2; ++p) {
+    HoleCardDealEvent hole_card_event(_current_hand_id, _id, _players[p]->getID(), holdings[p]);
+    _players[p].handleEvent(hole_card_event);
+    hand.handleEvent(p, hole_card_event);
   }
 
-  if (hand.isDone()) {
-    result.log(hand);
-    return;
-  }
+  hand.handleEvent(_button, _players[_button].requestSmallBlindPost(_small_blind_size));
+  hand.handleEvent(!_button, _players[!_button].requestBigBlindPost(_big_blind_size));
+
+  _doBettingRound(hand);
+  if (hand.isDone()) return;
   
-  hand.handleEvent(flop_event);
-  while (hand.isActive()) {
-    bool action_on = hand.getActionOn();
-    PlayerEvent event = _players[action_on]->handleActionRequest();
-    if (hand.handleEvent(action_on, event)) break;
-  }
-  if (hand.isDone()) {
-    result.log(hand);
-    return;
-  }
+  hand.handleEvent(FlopDealEvent(_current_hand_id, _id, flop));
+  _doBettingRound(hand);
+  if (hand.isDone()) return;
   
-  hand.handleEvent(turn_event);
-  while (hand.isActive()) {
-    bool action_on = hand.getActionOn();
-    PlayerEvent event = _players[action_on]->handleActionRequest();
-    if (hand.handleEvent(action_on, event)) break;
-  }
-  if (hand.isDone()) {
-    result.log(hand);
-    return;
-  }
+  hand.handleEvent(TurnDealEvent(_current_hand_id, _id, turn));
+  _doBettingRound(hand);
+  if (hand.isDone()) return;
   
-  hand.handleEvent(river_event);
-  while (hand.isActive()) {
-    bool action_on = hand.getActionOn();
-    PlayerEvent event = _players[action_on]->handleActionRequest();
-    if (hand.handleEvent(action_on, event)) break;
-  }
-  if (hand.isDone()) {
-    result.log(hand);
-    return;
-  }
+  hand.handleEvent(RiverDealEvent(_current_hand_id, _id, river));
+  _doBettingRound(hand);
+}
+
+void Session::_finish_hand(const SessionHand& hand) {
+  /*
+   * TODO: determine winner of hand, update scores
+   */
+  throw std::exception("implement me");
+}
+
+void Session::playHand(SessionLog& log) {
+  _init_hand();
+
+  SessionHand hand(log, _stack_size, _button);
+  _main_loop(hand);
+  _finish_hand(hand);
 }
 

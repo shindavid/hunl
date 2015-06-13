@@ -102,46 +102,36 @@ public:
     GameEvent(hand_id, session_id), DealEvent<3>(&card) {}
 };
 
-class BetEvent : public GameEvent, public PlayerEvent {
+class BettingDecision_Base : public GameEvent, public PlayerEvent {
+public:
+  BettingDecision_Base(hand_id_t hand_id, session_id_t session_id, player_id_t player_id) :
+    GameEvent(hand_id, session_id), PlayerEvent(player_id) {}
+};
+
+template <action_type_t action_type>
+class BettingDecision : public BettingDecision_Base {
 private:
-  chip_amount_t _size;
+  chip_amount_t _chip_amount;
 
 public:
-  BetEvent(hand_id_t hand_id, session_id_t session_id, player_id_t player_id, chip_amount_t size) :
-    GameEvent(hand_id, session_id), PlayerEvent(player_id), _size(size) {}
-
-  chip_amount_t getSize() const { return _size; }
+  BettingDecision(hand_id_t hand_id, session_id_t session_id, player_id_t player_id, 
+      chip_amount_t chip_amount=0) :
+    BettingDecision_Base(hand_id, session_id, player_id), _chip_amount(chip_amount)
+  {
+    if (action_type == ACTION_CHECK || action_type == ACTION_FOLD) {
+      assert(chip_amount==0);
+    } else {
+      assert(chip_amount>0);
+    }
+  }
+  
+  chip_amount_t getChipAmount() const { return _chip_amount; }
+  static const action_type ACTION_TYPE = action_type;
 };
 
-/*
- * A size of 10 means an additional 10 on top of opponent's bet/raise.
- */
-class RaiseEvent : public GameEvent, public PlayerEvent {
-private:
-  chip_amount_t _size;
-
-public:
-  RaiseEvent(hand_id_t hand_id, session_id_t session_id, player_id_t player_id, chip_amount_t size) :
-    GameEvent(hand_id, session_id), PlayerEvent(player_id), _size(size) {}
-
-  chip_amount_t getSize() const { return _size; }
-};
-
-class FoldEvent : public GameEvent, public PlayerEvent {
-public:
-  FoldEvent(hand_id_t hand_id, session_id_t session_id, player_id_t player_id) :
-    GameEvent(hand_id, session_id), PlayerEvent(player_id) {}
-};
-
-class CheckEvent : public GameEvent, public PlayerEvent {
-public:
-  CheckEvent(hand_id_t hand_id, session_id_t session_id, player_id_t player_id) :
-    GameEvent(hand_id, session_id), PlayerEvent(player_id) {}
-};
-
-class CallEvent : public GameEvent, public PlayerEvent {
-public:
-  CallEvent(hand_id_t hand_id, session_id_t session_id, player_id_t player_id) :
-    GameEvent(hand_id, session_id), PlayerEvent(player_id) {}
-};
+typedef BettingDecision<ACTION_BET> BetDecision;
+typedef BettingDecision<ACTION_RAISE> RaiseDecision;
+typedef BettingDecision<ACTION_CHECK> CheckDecision;
+typedef BettingDecision<ACTION_CALL> CallDecision;
+typedef BettingDecision<ACTION_FOLD> FoldDecision;
 

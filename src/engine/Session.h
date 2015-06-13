@@ -1,28 +1,14 @@
 #pragma once
 
 #include "TypeDefs.h"
-#include "pokerstove/penum/SimpleDeck.hpp"
+#include "Player.h"
+#include "Deck.h"
 #include "pokerstove/peval/CardSet.hpp"
 
 #include <cstdlib>
 #include <assert.h>
 
-class Player;
-
 namespace ps = pokerstove;
-
-class SessionHand {
-private:
-  ps::CardSet _hole_cards;
-  ps::CardSet _board;
-  chip_amount_t _pot_size;
-  chip_amount_t _stack_sizes[2];
-  bool _action_on : 1;
-  bool _button : 1;
-
-public:
-  SessionHand(chip_amount_t stack_size, bool button);
-};
 
 /*
  * A session is initialized with 2 Player's and a random seed.
@@ -42,20 +28,27 @@ private:
   session_id_t _id;  // eventually get assigned from a database
   hand_id_t _current_hand_id = 0;
 
-  ps::SimpleDeck _deck;
+  Deck _deck;
   uint64_t _base_seed;
   Player* _players[2];
   chip_amount_t _stack_size;  // every hand, stacks reset to this size
+  chip_amount_t _small_blind_size, _big_blind_size;
   chip_amount_t _score;  // positive means _players[0] is winning
-  bool _button;
+  seat_t _button;
 
 public:
-  Session(Player* p0, Player* p1, chip_amount_t stack_size, uint64_t seed);
+  Session(Player* p0, Player* p1, chip_amount_t stack_size, chip_amount_t small_blind_size,
+      chip_amount_t big_blind_size, uint64_t seed);
 
   void playHand(HandResult& result);
 
 private:
   static session_id_t __next_id;
+
+  void _init_hand();
+  void _main_loop(SessionHand& hand);
+  void _update_score(const SessionHand& hand);
+  void _doBettingRound(SessionHand& hand);
 };
 
 #include "SessionINLINES.cpp"
