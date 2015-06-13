@@ -21,7 +21,7 @@ Session::Session(Player* p0, Player* p1, chip_amount_t stack_size, chip_amount_t
   _button = rand() % 2;
 }
 
-void Session::_doBettingRound(SessionHand& hand) {
+void Session::_do_betting_round(SessionHand& hand) {
   while (!hand.isCurrentBettingRoundDone()) {
     seat_t seat = hand.getActionOn();
     BettingDecision decision = _players[seat]->handleBettingDecisionRequest();
@@ -65,19 +65,19 @@ void _main_loop(SessionHand& hand) {
   hand.handleEvent(_button, _players[_button].requestSmallBlindPost(_small_blind_size));
   hand.handleEvent(!_button, _players[!_button].requestBigBlindPost(_big_blind_size));
 
-  _doBettingRound(hand);
+  _do_betting_round(hand);
   if (hand.isDone()) return;
   
   hand.handleEvent(FlopDealEvent(_current_hand_id, _id, flop));
-  _doBettingRound(hand);
+  _do_betting_round(hand);
   if (hand.isDone()) return;
   
   hand.handleEvent(TurnDealEvent(_current_hand_id, _id, turn));
-  _doBettingRound(hand);
+  _do_betting_round(hand);
   if (hand.isDone()) return;
   
   hand.handleEvent(RiverDealEvent(_current_hand_id, _id, river));
-  _doBettingRound(hand);
+  _do_betting_round(hand);
 }
 
 void Session::_finish_hand(const SessionHand& hand) {

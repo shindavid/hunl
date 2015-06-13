@@ -47,8 +47,8 @@ private:
 
   void _init_hand();
   void _main_loop(SessionHand& hand);
-  void _update_score(const SessionHand& hand);
-  void _doBettingRound(SessionHand& hand);
+  void _finish_hand(const SessionHand& hand);
+  void _do_betting_round(SessionHand& hand);
 };
 
 #include "SessionINLINES.cpp"
