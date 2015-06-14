@@ -42,6 +42,8 @@ private:
   static uint64_t __next_id;
 };
 
+extern uint64_t GameEvent::__next_id = 1;
+
 /*
  * A base class. Any event performed by a specific player.
  */
