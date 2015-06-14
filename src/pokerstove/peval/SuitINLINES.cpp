@@ -5,25 +5,23 @@
 #include <iostream>
 #include <stdexcept>
 #include <boost/format.hpp>
-#include "Card.h"
-#include "Suit.h"
 
 using namespace std;
 using namespace pokerstove;
 
 Suit::display Suit::__suitStringType = SUIT_ASCII;
 
-void Suit::setSuitStringType(Suit::display s)
+inline void Suit::setSuitStringType(Suit::display s)
 {
     __suitStringType = s;
 }
 
-Suit::display Suit::getSuitStringType()
+inline Suit::display Suit::getSuitStringType()
 {
     return __suitStringType;
 }
 
-string Suit::decodeSuitANSI_EXT(int c) const
+inline string Suit::decodeSuitANSI_EXT(int c) const
 {
     if (c < 0)
         return "x";
@@ -47,7 +45,7 @@ string Suit::decodeSuitANSI_EXT(int c) const
 }
 
 
-string Suit::decodeSuitUnicode(int c) const
+inline string Suit::decodeSuitUnicode(int c) const
 {
     if (c < 0)
         return "x";
@@ -72,7 +70,7 @@ string Suit::decodeSuitUnicode(int c) const
     return "?";
 }
 
-string Suit::decodeSuitASCII(int c) const
+inline string Suit::decodeSuitASCII(int c) const
 {
     if (c < 0)
         return "x";
@@ -93,7 +91,7 @@ string Suit::decodeSuitASCII(int c) const
     return "?";
 }
 
-string Suit::decodeSuitASCII_EXT(int card) const
+inline string Suit::decodeSuitASCII_EXT(int card) const
 {
     if (card < 0)
         return "x";
@@ -121,7 +119,7 @@ string Suit::decodeSuitASCII_EXT(int card) const
     return buf;
 }
 
-string Suit::decodeSuitHTML(int c) const
+inline string Suit::decodeSuitHTML(int c) const
 {
     switch (c)
     {
@@ -138,7 +136,7 @@ string Suit::decodeSuitHTML(int c) const
     }
 }
 
-string Suit::decodeSuit4ColorHTML(int c) const
+inline string Suit::decodeSuit4ColorHTML(int c) const
 {
     string suit = "<font ";
 
@@ -166,7 +164,7 @@ string Suit::decodeSuit4ColorHTML(int c) const
     return suit;
 }
 
-string Suit::decodeSuit2ColorHTML(int c) const
+inline string Suit::decodeSuit2ColorHTML(int c) const
 {
     string suit = "<font ";
 
@@ -191,7 +189,7 @@ string Suit::decodeSuit2ColorHTML(int c) const
     return suit;
 }
 
-string Suit::decodeSuit(int c) const
+inline string Suit::decodeSuit(int c) const
 {
     switch (__suitStringType)
     {
@@ -222,7 +220,7 @@ string Suit::decodeSuit(int c) const
     return "?";
 }
 
-int Suit::suit_code(char c)
+inline int Suit::suit_code(char c)
 {
     switch (c)
     {
@@ -242,22 +240,22 @@ int Suit::suit_code(char c)
     throw std::invalid_argument((string("Suit, parse error: ") + c).c_str());
 }
 
-Suit::Suit(const std::string& str)
+inline Suit::Suit(const std::string& str)
     : _suit(suit_code(str[0]))
 {}
 
 
-string Suit::str() const
+inline string Suit::str() const
 {
     return decodeSuit(_suit);
 }
 
-void Suit::fromString(const string& c)
+inline void Suit::fromString(const string& c)
 {
     _suit = suit_code(c[0]);
 }
 
-bool Suit::isSuitChar(char c)
+inline bool Suit::isSuitChar(char c)
 {
     switch (c)
     {

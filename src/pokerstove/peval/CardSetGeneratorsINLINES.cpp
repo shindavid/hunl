@@ -1,7 +1,6 @@
 /**
  * Copyright (c) 2013 Andrew Prock. All rights reserved.
  */
-#include "CardSetGenerators.h"
 #include "Card.h"
 #include <pokerstove/util/combinations.h>
 
@@ -9,7 +8,7 @@ namespace pokerstove
 {
 
 
-std::set<CardSet>
+inline std::set<CardSet>
 createCardSet(size_t numCards, Card::Grouping grouping)
 {
     std::set<CardSet> ret;

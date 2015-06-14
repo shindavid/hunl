@@ -1,8 +1,7 @@
 /**
  * Copyright (c) 2012 Andrew Prock. All rights reserved.
  */
-#ifndef PEVAL_CARDSETGENERATORS_H_
-#define PEVAL_CARDSETGENERATORS_H_
+#pragma once
 
 #include <set>
 #include "Card.h"
@@ -36,4 +35,5 @@ std::set<CardSet>
 createCardSet(size_t numCards, Card::Grouping grouping=Card::RANK_SUIT);
 }
 
-#endif  // PEVAL_CARDSETGENERATORS_H_
+#include "CardSetGeneratorsINLINES.cpp"
+

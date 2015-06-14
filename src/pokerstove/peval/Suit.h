@@ -2,8 +2,7 @@
  * Copyright (c) 2012 Andrew Prock. All rights reserved.
  * $Id: Suit.h 2649 2012-06-30 04:53:24Z prock $
  */
-#ifndef PEVAL_SUIT_H_
-#define PEVAL_SUIT_H_
+#pragma once
 
 #include <string>
 #include <boost/operators.hpp>
@@ -93,24 +92,13 @@ public:
     void operator++()                    { ++_suit; }
     void operator--()                    { --_suit; }
 
-private:
-    /**
-     * We break encapsulation with these methods.  To limit the
-     * effects of leakage, we limit access to these functions to
-     * friends.
-     */
     uint8_t code() const      { return _suit; }
     void    encode(uint8_t c) { _suit = c; }
     int     suitBit() const   { return 0x01<<_suit*3; }
 
-    void fromString(const std::string& s);
-
     static bool isSuitChar(char c);
 
-    friend class Card;
-    friend class CardSet;
-
-    uint8_t _suit;
+    void fromString(const std::string& s);
 
     static display __suitStringType;
 
@@ -127,8 +115,12 @@ private:
     static uint8_t DiamondVal() { return 1; }
     static uint8_t HeartVal()   { return 2; }
     static uint8_t SpadeVal()   { return 3; }
+
+private:
+    uint8_t _suit;
 };
 
 }
 
-#endif  // PEVAL_SUIT_H_
+#include "SuitINLINES.cpp"
+

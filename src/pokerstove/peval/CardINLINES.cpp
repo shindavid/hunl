@@ -3,43 +3,40 @@
  * $Id: Card.cpp 2649 2012-06-30 04:53:24Z prock $
  */
 #include <iostream>
-#include "Rank.h"
-#include "Suit.h"
-#include "Card.h"
 
 using pokerstove::Suit;
 using pokerstove::Rank;
 using pokerstove::Card;
 
-Card::Card()
+inline Card::Card()
     : _card(0)
 {}
 
-Card::Card(const std::string& str)
+inline Card::Card(const std::string& str)
     : _card(0)
 {
     fromString(str);
 }
 
-Card::Card(const Rank& r, const Suit& s)
+inline Card::Card(const Rank& r, const Suit& s)
     : _card(encode(r,s))
 {}
 
-Card::Card(uint8_t cindex)
+inline Card::Card(uint8_t cindex)
     : _card(cindex)
 {}
 
-Rank Card::rank() const
+inline Rank Card::rank() const
 {
     return Rank(_card%Rank::NUM_RANK);
 }
 
-Suit Card::suit() const
+inline Suit Card::suit() const
 {
     return Suit(_card/Rank::NUM_RANK);
 }
 
-std::string Card::str() const
+inline std::string Card::str() const
 {
     static const std::string cardstrings =
             "2c3c4c5c6c7c8c9cTcJcQcKcAc"
@@ -49,7 +46,7 @@ std::string Card::str() const
     return cardstrings.substr(_card*2, 2);
 }
 
-bool Card::fromString(const std::string& str)
+inline bool Card::fromString(const std::string& str)
 {
     if (Rank::isRankChar(str[0]) && Suit::isSuitChar(str[1]))
     {
@@ -59,17 +56,17 @@ bool Card::fromString(const std::string& str)
     return false;
 }
 
-int Card::code() const
+inline int Card::code() const
 {
     return _card;
 }
 
-uint8_t Card::encode(Rank r, Suit s)
+inline uint8_t Card::encode(Rank r, Suit s)
 {
     return r.code() + s.code() * Rank::NUM_RANK;
 }
 
-bool Card::operator< (const Card& r) const
+inline bool Card::operator< (const Card& r) const
 {
     if ((_card%Rank::NUM_RANK) == (r._card%Rank::NUM_RANK))
         return _card/Rank::NUM_RANK < r._card/Rank::NUM_RANK;

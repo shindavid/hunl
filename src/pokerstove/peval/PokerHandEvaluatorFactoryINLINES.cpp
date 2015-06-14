@@ -20,7 +20,7 @@
 using namespace std;
 using namespace pokerstove;
 
-boost::shared_ptr<PokerHandEvaluator> PokerHandEvaluator::alloc(const string& strid)
+inline boost::shared_ptr<PokerHandEvaluator> PokerHandEvaluator::alloc(const string& strid)
 {
     boost::shared_ptr<PokerHandEvaluator> ret;
     switch (strid[0])

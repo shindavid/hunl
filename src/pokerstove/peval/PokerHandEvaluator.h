@@ -2,12 +2,10 @@
  * Copyright (c) 2012 Andrew Prock. All rights reserved.
  * $Id: PokerHandEvaluator.h 2649 2012-06-30 04:53:24Z prock $
  */
-#ifndef PEVAL_POKERHANDEVALUATOR_H_
-#define PEVAL_POKERHANDEVALUATOR_H_
+#pragma once
 
 #include <vector>
 #include <string>
-#include <boost/shared_ptr.hpp>
 #include <boost/lexical_cast.hpp>
 #include "CardSet.h"
 #include "PokerHandEvaluation.h"
@@ -61,30 +59,6 @@ class PokerHandEvaluator
 {
 public:
     virtual ~PokerHandEvaluator();
-
-    /**
-     * Construction of subclasses must be done through this Factory.
-     * The subclass is identified by the first letter of the input
-     * string according to the table below
-     *
-     * supported games:
-     * - 'h'    hold'em (or high if no board)
-     * - 'k'    Kansas City lowball (2-7)
-     * - 'l'    lowball (A-5)
-     * - '3'    three card poker
-     * - 'O'    omaha high
-     * - 'r'    razz
-     * - 's'    stud
-     * - 'q'    stud high/low no qualifier
-     * - 'd'    draw high
-     * - 't'    triple draw lowball (2-7)
-     * - 'T'    triple draw lowball (A-5)
-     * - 'o'    omaha/high low
-     * - 'e'    stud/8
-     * - 'b'    badugi
-     */
-    typedef boost::shared_ptr<PokerHandEvaluator> eval_ptr;
-    static eval_ptr alloc(const std::string& strid);
 
     /**
      * The generic evaluation method.  returns the evaluation for this
@@ -193,4 +167,5 @@ typedef PokerHandEvaluator GameEvaluator;
 
 }
 
-#endif  // PEVAL_POKERHANDEVALUATOR_H_
+#include "PokerHandEvaluatorINLINES.cpp"
+

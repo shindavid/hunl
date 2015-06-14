@@ -9,12 +9,12 @@ using namespace std;
 using namespace boost;
 using namespace pokerstove;
 
-PokerHandEvaluator::PokerHandEvaluator()
+inline PokerHandEvaluator::PokerHandEvaluator()
     : _subclassID("abstract-base-class")
     , _useSuits(true)
 {}
 
-PokerHandEvaluator::~PokerHandEvaluator()
+inline PokerHandEvaluator::~PokerHandEvaluator()
 {}
 
 static double INV_LUT[] = {0,
@@ -36,7 +36,7 @@ void display(const vector<CardSet>& hands,
     cout << endl;
 }
 
-void PokerHandEvaluator::evaluateShowdown(const vector<CardSet>& hands,
+inline void PokerHandEvaluator::evaluateShowdown(const vector<CardSet>& hands,
         const CardSet& board,
         vector<PokerHandEvaluation>& evals,
         vector<EquityResult>& result,

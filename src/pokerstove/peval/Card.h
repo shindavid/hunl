@@ -2,18 +2,16 @@
  * Copyright (c) 2012 Andrew Prock. All rights reserved.
  * $Id: Card.h 2649 2012-06-30 04:53:24Z prock $
  */
-#ifndef PEVAL_CARD_H_
-#define PEVAL_CARD_H_
+#pragma once
+
+#include "Rank.h"
+#include "Suit.h"
 
 #include <string>
 #include <boost/cstdint.hpp>
 
 namespace pokerstove
 {
-// forward declarations,
-class Suit;
-class Rank;
-
 /**
  * This card class is designed to make the manipulation and
  * abstraction of cards as friendly as possible.
@@ -87,4 +85,5 @@ private:
 };
 }
 
-#endif  // PEVAL_CARD_H_
+#include "CardINLINES.cpp"
+

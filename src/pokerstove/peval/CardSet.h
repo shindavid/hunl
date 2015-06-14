@@ -2,8 +2,7 @@
  * Copyright (c) 2012 Andrew Prock. All rights reserved.
  * $Id: CardSet.h 2649 2012-06-30 04:53:24Z prock $
  */
-#ifndef PEVAL_CARDSET_H_
-#define PEVAL_CARDSET_H_
+#pragma once
 
 #include <iosfwd>
 #include <vector>
@@ -11,11 +10,11 @@
 #include <boost/cstdint.hpp>
 #include "Rank.h"
 #include "Suit.h"
+#include "Card.h"
 
 namespace pokerstove
 {
 // forward declares
-class Card;
 class PokerEvaluation;
 
 const size_t STANDARD_DECK_SIZE = Rank::NUM_RANK* Suit::NUM_SUIT;
@@ -198,4 +197,5 @@ CardSet canonizeToBoard(const CardSet& board, const CardSet& hand);
 std::vector<int> findSuitPermutation(const CardSet& source, const CardSet& dest);
 } // namespace pokerstove
 
-#endif  // PEVAL_CARDSET_H_
+#include "CardSetINLINES.cpp"
+

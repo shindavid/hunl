@@ -19,21 +19,21 @@ const int MINOR_MASK  = 0xF<<MINOR_SHIFT;
 const int KICKER_MASK = 0x1FFF;
 
 
-PokerEvaluation::PokerEvaluation()
+inline PokerEvaluation::PokerEvaluation()
     : _evalcode(0)
 {}
 
 
-PokerEvaluation::PokerEvaluation(int ecode)
+inline PokerEvaluation::PokerEvaluation(int ecode)
     : _evalcode(ecode)
 {}
 
-int PokerEvaluation::code() const
+inline int PokerEvaluation::code() const
 {
     return _evalcode;
 }
 
-int PokerEvaluation::reducedCode() const
+inline int PokerEvaluation::reducedCode() const
 {
     if (isFlipped())
     {
@@ -69,7 +69,7 @@ int PokerEvaluation::reducedCode() const
     }
 }
 
-int PokerEvaluation::reducedCode2to7() const
+inline int PokerEvaluation::reducedCode2to7() const
 {
     if (_evalcode == 0)
         return 0;
@@ -170,7 +170,7 @@ int PokerEvaluation::reducedCode2to7() const
     }
 }
 
-int PokerEvaluation::showdownCode() const
+inline int PokerEvaluation::showdownCode() const
 {
     if (_evalcode == 0)
         return 0;
@@ -195,22 +195,22 @@ int PokerEvaluation::showdownCode() const
     }
 }
 
-int PokerEvaluation::type() const
+inline int PokerEvaluation::type() const
 {
     return _evalcode >> VSHIFT;
 }
 
-int  PokerEvaluation::kickerBits() const { return _evalcode  & KICKER_MASK; }
-Rank PokerEvaluation::majorRank() const  { return Rank((_evalcode >> MAJOR_SHIFT) & 0x0F); }
-Rank PokerEvaluation::minorRank() const  { return Rank((_evalcode >> MINOR_SHIFT) & 0x0F); }
-void PokerEvaluation::setKickerBits(int k)  { _evalcode = (_evalcode & ~KICKER_MASK) | k; }
-void PokerEvaluation::setMajorRank(int r)   { _evalcode = (_evalcode & ~MAJOR_MASK) | r<<MAJOR_SHIFT; }
-void PokerEvaluation::setMinorRank(int r)   { _evalcode = (_evalcode & ~MINOR_MASK) | r<<MINOR_SHIFT; }
+inline int  PokerEvaluation::kickerBits() const { return _evalcode  & KICKER_MASK; }
+inline Rank PokerEvaluation::majorRank() const  { return Rank((_evalcode >> MAJOR_SHIFT) & 0x0F); }
+inline Rank PokerEvaluation::minorRank() const  { return Rank((_evalcode >> MINOR_SHIFT) & 0x0F); }
+inline void PokerEvaluation::setKickerBits(int k)  { _evalcode = (_evalcode & ~KICKER_MASK) | k; }
+inline void PokerEvaluation::setMajorRank(int r)   { _evalcode = (_evalcode & ~MAJOR_MASK) | r<<MAJOR_SHIFT; }
+inline void PokerEvaluation::setMinorRank(int r)   { _evalcode = (_evalcode & ~MINOR_MASK) | r<<MINOR_SHIFT; }
 
 // this converts the evaluation to one where
 // the ace is valued as low instead of high,
 // thus 2 > A internally.
-void PokerEvaluation::playAceLow()
+inline void PokerEvaluation::playAceLow()
 {
     if (acePlaysLow())
         return;
@@ -241,7 +241,7 @@ void PokerEvaluation::playAceLow()
     };
 }
 
-void PokerEvaluation::playAceHigh()
+inline void PokerEvaluation::playAceHigh()
 {
     if (acePlaysLow() == false)
         return;
@@ -257,14 +257,14 @@ void PokerEvaluation::playAceHigh()
     setKickerBits(kickers);
 }
 
-bool PokerEvaluation::acePlaysLow() const
+inline bool PokerEvaluation::acePlaysLow() const
 {
     if (_evalcode & ACE_LOW_BIT)
         return true;
     return false;
 }
 
-void PokerEvaluation::fixWheel2to7(int rankMask)
+inline void PokerEvaluation::fixWheel2to7(int rankMask)
 {
     if (type() == STRAIGHT && majorRank() == Rank::Five())
     {
@@ -276,7 +276,7 @@ void PokerEvaluation::fixWheel2to7(int rankMask)
     }
 }
 
-string PokerEvaluation::makeRankString(int r, bool acelow) const
+inline string PokerEvaluation::makeRankString(int r, bool acelow) const
 {
     if (acelow)
     {
@@ -291,7 +291,7 @@ string PokerEvaluation::makeRankString(int r, bool acelow) const
 }
 
 
-string PokerEvaluation::strKickers(int n) const
+inline string PokerEvaluation::strKickers(int n) const
 {
     string out;
     for (int i=Rank::NUM_RANK-1; i>=0; i--)
@@ -304,7 +304,7 @@ string PokerEvaluation::strKickers(int n) const
     return out;
 }
 
-string PokerEvaluation::strTop(int n) const
+inline string PokerEvaluation::strTop(int n) const
 {
     int i = (n >> 20) & 0x0F;
     //    Rank r(i);
@@ -312,7 +312,7 @@ string PokerEvaluation::strTop(int n) const
     return makeRankString(i, acePlaysLow());
 }
 
-string PokerEvaluation::strBot(int n) const
+inline string PokerEvaluation::strBot(int n) const
 {
     int i = (n >> 16) & 0x0F;
     //    Rank r(i);
@@ -320,7 +320,7 @@ string PokerEvaluation::strBot(int n) const
     return makeRankString(i, acePlaysLow());
 }
 
-string PokerEvaluation::bitstr() const
+inline string PokerEvaluation::bitstr() const
 {
     string ret;
     int n = _evalcode;
@@ -336,7 +336,7 @@ string PokerEvaluation::bitstr() const
     return ret;
 }
 
-string PokerEvaluation::str() const
+inline string PokerEvaluation::str() const
 {
     string ret;
     int n = _evalcode;
@@ -358,7 +358,7 @@ string PokerEvaluation::str() const
     return ret;
 }
 
-string PokerEvaluation::toStringCannon() const
+inline string PokerEvaluation::toStringCannon() const
 {
     const string highcard       = "high card:    ";
     const string onepair        = "one pair:     ";
@@ -466,7 +466,7 @@ string PokerEvaluation::toStringCannon() const
 
 }
 
-void PokerEvaluation::generateLowballLookupA5()
+inline void PokerEvaluation::generateLowballLookupA5()
 {
     cout << "const int lowballA5Ranks[] = {\n";
     // this is a 13 bit lookup table
@@ -495,7 +495,7 @@ void PokerEvaluation::generateLowballLookupA5()
     cout << "};\n";
 }
 
-void PokerEvaluation::generateBottomRankMask()
+inline void PokerEvaluation::generateBottomRankMask()
 {
     cout << "const int bottomRankMask[] = {\n";
     // this is a 13 bit lookup table
@@ -516,7 +516,7 @@ void PokerEvaluation::generateBottomRankMask()
     cout << "};\n";
 }
 
-std::ostream& operator<<(std::ostream& sout, const pokerstove::PokerEvaluation& e)
+inline std::ostream& operator<<(std::ostream& sout, const pokerstove::PokerEvaluation& e)
 {
     sout << e.str();
     return sout;

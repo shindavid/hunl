@@ -52,25 +52,25 @@ using namespace pokerstove;
  * ctors
  */
 
-CardSet::CardSet()
+inline CardSet::CardSet()
     : _cardmask(0)
 {}
 
-CardSet::CardSet(const CardSet& cs)
+inline CardSet::CardSet(const CardSet& cs)
     : _cardmask(cs._cardmask)
 {}
 
-CardSet::CardSet(const Card& c)
+inline CardSet::CardSet(const Card& c)
     : _cardmask(ONE64 << c._card)
 {}
 
-CardSet::CardSet(const string& c)
+inline CardSet::CardSet(const string& c)
     : _cardmask(0)
 {
     fromString(c);
 }
 
-string CardSet::str() const
+inline string CardSet::str() const
 {
     string out = "";
     uint64_t v = _cardmask;
@@ -83,7 +83,7 @@ string CardSet::str() const
 }
 
 // TODO: use same loop as in ::str()
-string CardSet::rankstr() const
+inline string CardSet::rankstr() const
 {
     string out = "";
     for (size_t i=0; i<STANDARD_DECK_SIZE; i++)
@@ -99,7 +99,7 @@ string CardSet::rankstr() const
     return out;
 }
 
-string CardSet::toRankBitString() const
+inline string CardSet::toRankBitString() const
 {
     string out = "";
     for (size_t i=0; i<STANDARD_DECK_SIZE; i++)
@@ -114,7 +114,7 @@ string CardSet::toRankBitString() const
     return out;
 }
 
-size_t CardSet::countSuits() const
+inline size_t CardSet::countSuits() const
 {
     int ns = 0;
     for (size_t i=0; i<Suit::NUM_SUIT; i++)
@@ -123,7 +123,7 @@ size_t CardSet::countSuits() const
     return ns;
 }
 
-size_t CardSet::countMaxSuit() const
+inline size_t CardSet::countMaxSuit() const
 {
     vector<size_t> suit(Suit::NUM_SUIT);
     suit[0] = (nRanksTable[SMASK(0)]);
@@ -134,7 +134,7 @@ size_t CardSet::countMaxSuit() const
     return *std::max_element(suit.begin(),suit.end());
 }
 
-size_t CardSet::size() const
+inline size_t CardSet::size() const
 {
     uint64_t v = _cardmask;
     size_t c;
@@ -145,7 +145,7 @@ size_t CardSet::size() const
     return c;
 }
 
-void CardSet::fromString(const string& instr)
+inline void CardSet::fromString(const string& instr)
 {
 	clear ();
 
@@ -165,13 +165,13 @@ void CardSet::fromString(const string& instr)
     }
 }
 
-CardSet& CardSet::insert(const CardSet& c)
+inline CardSet& CardSet::insert(const CardSet& c)
 {
     _cardmask |= c._cardmask;
     return *this;
 }
 
-CardSet CardSet::rotateSuits(int c, int d, int h, int s) const
+inline CardSet CardSet::rotateSuits(int c, int d, int h, int s) const
 {
     return CardSet(
                static_cast<uint64_t>(suitMask(Suit::Clubs()))    << Rank::NUM_RANK*c |
@@ -180,12 +180,12 @@ CardSet CardSet::rotateSuits(int c, int d, int h, int s) const
                static_cast<uint64_t>(suitMask(Suit::Spades()))   << Rank::NUM_RANK*s);
 }
 
-void CardSet::flipSuits()
+inline void CardSet::flipSuits()
 {
     *this = rotateSuits(3, 2, 1, 0);
 }
 
-CardSet CardSet::canonize() const
+inline CardSet CardSet::canonize() const
 {
     int smasks[Suit::NUM_SUIT];
     int i=0;
@@ -201,7 +201,7 @@ CardSet CardSet::canonize() const
                static_cast<uint64_t>(smasks[0]) << Rank::NUM_RANK*3);
 }
 
-CardSet CardSet::canonize(const CardSet& other) const
+inline CardSet CardSet::canonize(const CardSet& other) const
 {
     CardSet cother = other.canonize();
     vector<int> perms = findSuitPermutation(other, cother);
@@ -212,7 +212,7 @@ CardSet CardSet::canonize(const CardSet& other) const
 
 
 // This is super slow, make it faster
-bool CardSet::insertRanks(const CardSet& rset)
+inline bool CardSet::insertRanks(const CardSet& rset)
 {
     // try the fastest way first
     if ((_cardmask & rset._cardmask) == 0)
@@ -259,7 +259,7 @@ bool CardSet::insertRanks(const CardSet& rset)
     return true;
 }
 
-CardSet CardSet::canonizeRanks() const
+inline CardSet CardSet::canonizeRanks() const
 {
     // this is very slow, optimize if it winds up in an inner loop
     CardSet ret;
@@ -279,13 +279,13 @@ CardSet CardSet::canonizeRanks() const
     return ret;
 }
 
-CardSet& CardSet::insert(const Card& c)
+inline CardSet& CardSet::insert(const Card& c)
 {
     _cardmask |= (ONE64 << c.code());
     return *this;
 }
 
-vector<Card> CardSet::cards() const
+inline vector<Card> CardSet::cards() const
 {
     vector<Card> out(size());
     size_t n = 0;
@@ -295,7 +295,7 @@ vector<Card> CardSet::cards() const
     return out;
 }
 
-vector<CardSet> CardSet::cardSets() const
+inline vector<CardSet> CardSet::cardSets() const
 {
     vector<CardSet> out(size());
     size_t n = 0;
@@ -360,12 +360,12 @@ size_t CardSet::countRanks() const
     return nRanksTable[C() | D() | H() | S()];
 }
 
-int CardSet::suitMask(const Suit& s) const
+inline int CardSet::suitMask(const Suit& s) const
 {
     return SMASK(s.code());
 }
 
-size_t CardSet::count(const Rank& r) const
+inline size_t CardSet::count(const Rank& r) const
 {
 #if 1
     // this version is faster, if less obvious
@@ -403,7 +403,7 @@ size_t CardSet::count(const Rank& r) const
 }
 
 
-bool CardSet::hasStraight() const
+inline bool CardSet::hasStraight() const
 {
     if (straightTable[RMASK()] > 0)
         return true;
@@ -416,7 +416,7 @@ bool CardSet::hasStraight() const
 // PokerHand, maybe it would speed things up.
 //
 // note, there are no function calls in this function
-PokerEvaluation CardSet::evaluateHigh() const
+inline PokerEvaluation CardSet::evaluateHigh() const
 {
     // first the easy stuff
     int c = C();
@@ -566,7 +566,7 @@ PokerEvaluation CardSet::evaluateHigh() const
 
 // same as evaluateHigh, but with the non-flush logic
 // elided
-PokerEvaluation CardSet::evaluateHighFlush() const
+inline PokerEvaluation CardSet::evaluateHighFlush() const
 {
     // first the easy stuff
     int c = C();
@@ -613,7 +613,7 @@ PokerEvaluation CardSet::evaluateHighFlush() const
 
 // evaluteHighRanks, same as evaluateHigh, but with the flush logic
 // elided
-PokerEvaluation CardSet::evaluateHighRanks() const
+inline PokerEvaluation CardSet::evaluateHighRanks() const
 {
     // first the easy stuff
     int c = C();
@@ -731,7 +731,7 @@ PokerEvaluation CardSet::evaluateHighRanks() const
 }
 
 // this is just evaluateHigh without the straight or flush code
-PokerEvaluation CardSet::evaluatePairing() const
+inline PokerEvaluation CardSet::evaluatePairing() const
 {
     // first the easy stuff
     int c = C();
@@ -841,7 +841,7 @@ PokerEvaluation CardSet::evaluatePairing() const
 }
 
 // This one is not fully optimized
-PokerEvaluation CardSet::evaluateLow2to7() const
+inline PokerEvaluation CardSet::evaluateLow2to7() const
 {
     PokerEvaluation high;
 
@@ -887,7 +887,7 @@ PokerEvaluation CardSet::evaluateLow2to7() const
 }
 
 // This one is not fully optimized
-PokerEvaluation CardSet::evaluateRanksLow2to7() const
+inline PokerEvaluation CardSet::evaluateRanksLow2to7() const
 {
     PokerEvaluation high;
     PokerEvaluation h;
@@ -935,7 +935,7 @@ PokerEvaluation CardSet::evaluateRanksLow2to7() const
 
 
 // This one is not fully optimized
-PokerEvaluation CardSet::evaluateSuitsLow2to7() const
+inline PokerEvaluation CardSet::evaluateSuitsLow2to7() const
 {
     PokerEvaluation high;
 
@@ -983,7 +983,7 @@ PokerEvaluation CardSet::evaluateSuitsLow2to7() const
 
 
 // This one is not fully optimized
-PokerEvaluation CardSet::evaluateLowA5() const
+inline PokerEvaluation CardSet::evaluateLowA5() const
 {
     //PokerEvaluation::generateLowballLookupA5();
 
@@ -1082,7 +1082,7 @@ PokerEvaluation CardSet::evaluateLowA5() const
     }
 }
 
-PokerEvaluation CardSet::evaluate8LowA5() const
+inline PokerEvaluation CardSet::evaluate8LowA5() const
 {
     // bits 2-8+A are set here
     const int LOW_MASK = 0x107F;
@@ -1106,7 +1106,7 @@ PokerEvaluation CardSet::evaluate8LowA5() const
     return e;
 }
 
-PokerEvaluation CardSet::evaluate3CP() const
+inline PokerEvaluation CardSet::evaluate3CP() const
 {
     int c = C();
     int d = D();
@@ -1176,7 +1176,7 @@ static inline bool badugiless(int c1, int c2)
  * traversals will be done.  Suits of size zero can be ruled out and
  * those with size one can be ruled in.
  */
-PokerEvaluation CardSet::evaluateBadugi() const
+inline PokerEvaluation CardSet::evaluateBadugi() const
 {
     // get our ranks orgainzed in lowball order by suit
     boost::array<int,4> suits =
@@ -1240,7 +1240,7 @@ PokerEvaluation CardSet::evaluateBadugi() const
     return ret;
 }
 
-bool CardSet::isPaired() const  // returns true if *any* two cards match rank
+inline bool CardSet::isPaired() const  // returns true if *any* two cards match rank
 {
     int c = C();
     int d = D();
@@ -1254,7 +1254,7 @@ bool CardSet::isPaired() const  // returns true if *any* two cards match rank
     return false;
 }
 
-size_t CardSet::countMaxRank() const         // returns true if trips or quads
+inline size_t CardSet::countMaxRank() const         // returns true if trips or quads
 {
     int c = C();
     int d = D();
@@ -1282,7 +1282,7 @@ size_t CardSet::countMaxRank() const         // returns true if trips or quads
     return 0;
 }
 
-bool CardSet::isTripped() const         // returns true if trips or quads
+inline bool CardSet::isTripped() const         // returns true if trips or quads
 {
     int c = C();
     int d = D();
@@ -1298,22 +1298,22 @@ bool CardSet::isTripped() const         // returns true if trips or quads
     return false;
 }
 
-size_t CardSet::count(const Suit& s) const
+inline size_t CardSet::count(const Suit& s) const
 {
     return nRanksTable[SMASK(s.code())];
 }
 
-Rank CardSet::flushRank(const Suit& s) const
+inline Rank CardSet::flushRank(const Suit& s) const
 {
     return Rank(topRankTable[SMASK(s.code())]);
 }
 
-Rank CardSet::topRank() const
+inline Rank CardSet::topRank() const
 {
     return Rank(topRankTable[RMASK()]);
 }
 
-Rank CardSet::bottomRank() const
+inline Rank CardSet::bottomRank() const
 {
     return Rank(botRankTable[RMASK()]);
 }
@@ -1325,7 +1325,7 @@ double clampedChoose(int n, int m)
     return static_cast<size_t>(boost::math::binomial_coefficient<double>(n,m));
 }
 
-int CardSet::evaluateStraightOuts() const
+inline int CardSet::evaluateStraightOuts() const
 {
     int sval = straightTable[RMASK()];
     if (sval > 0)         // straight on board, all cards make straight
@@ -1340,7 +1340,7 @@ int CardSet::evaluateStraightOuts() const
 }
 
 // original version in r2488
-size_t CardSet::rankColex() const
+inline size_t CardSet::rankColex() const
 {
     size_t ret  = 0;
     int slot = 0;
@@ -1410,7 +1410,7 @@ CardSet pokerstove::canonizeToBoard(const CardSet& board, const CardSet& hand)
 #undef RMASK
 #undef SUITMASK
 
-size_t CardSet::colex() const
+inline size_t CardSet::colex() const
 {
     vector<Card> cards = this->cards();
     size_t value = 0;

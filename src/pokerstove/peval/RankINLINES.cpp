@@ -8,12 +8,12 @@
 using namespace std;
 using namespace pokerstove;
 
-Rank::Rank(const string& c)
+inline Rank::Rank(const string& c)
 {
     fromString(c);
 }
 
-Rank::Rank(uint8_t code)
+inline Rank::Rank(uint8_t code)
 {
     if (code <= RANK_ACE)
         _rank = code;
@@ -21,7 +21,7 @@ Rank::Rank(uint8_t code)
         _rank = rank_code(code);
 }
 
-string Rank::str() const
+inline string Rank::str() const
 {
     switch (_rank)
     {
@@ -42,7 +42,7 @@ string Rank::str() const
     return "?";
 }
 
-void Rank::fromString(const string& c)
+inline void Rank::fromString(const string& c)
 {
     int code = rank_code(c[0]);
     if (code >= 0)
@@ -51,7 +51,7 @@ void Rank::fromString(const string& c)
         throw std::domain_error(string("rank parse error: " + c).c_str());
 }
 
-int Rank::rank_code(char c)
+inline int Rank::rank_code(char c)
 {
     switch (c)
     {
@@ -77,7 +77,7 @@ int Rank::rank_code(char c)
     return -1;
 }
 
-bool Rank::isRankChar(char c)
+inline bool Rank::isRankChar(char c)
 {
     if (rank_code(c) >= 0)
         return true;

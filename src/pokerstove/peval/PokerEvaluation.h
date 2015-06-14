@@ -2,8 +2,7 @@
  * Copyright (c) 2012 Andrew Prock. All rights reserved.
  * $Id: PokerEvaluation.h 2649 2012-06-30 04:53:24Z prock $
  */
-#ifndef PEVAL_POKEREVALUATION_H_
-#define PEVAL_POKEREVALUATION_H_
+#pragma once
 
 #include <iosfwd>
 #include <climits>
@@ -119,6 +118,7 @@ public:
     bool operator==(const PokerEvaluation& e) const { return _evalcode == e._evalcode; }
     bool operator!=(const PokerEvaluation& e) const { return _evalcode != e._evalcode; }
     bool operator<=(const PokerEvaluation& e) const { return _evalcode <= e._evalcode; }
+    bool operator>=(const PokerEvaluation& e) const { return _evalcode >= e._evalcode; }
     bool operator< (const PokerEvaluation& e) const { return _evalcode <  e._evalcode; }
     bool operator> (const PokerEvaluation& e) const { return _evalcode >  e._evalcode; }
     void operator++()                    { ++_evalcode; }
@@ -195,4 +195,5 @@ typedef PokerEvaluation Evaluation;
 //
 std::ostream& operator<<(std::ostream& sout, const pokerstove::PokerEvaluation& e);
 
-#endif  // PEVAL_POKEREVALUATION_H_
+#include "PokerEvaluationINLINES.cpp"
+
