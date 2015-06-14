@@ -1,21 +1,14 @@
-// Included by SessionHand.h
+// Included by HandState.h
 
-SessionHand::SessionHand(SessionLog& log, chip_amount_t stack_size, seat_t button) : 
-  _log(log)
-  _stack_size(stack_size)
-{
-  for (seat_type_t seat=0; seat<2; ++seat) {
-    _wagered_current_round[seat] = 0;
-    _wagered_prior_rounds[seat] = 0;
-    _folded[seat] = false;
-  }
-  _action_on = button;
-  _button = button;
-  _is_current_betting_round_done = false;
-}
+HandState::HandState(SessionLog& log, session_id_t session_id, hand_id_t id,
+    chip_amount_t starting_stack_size, seat_t button) : 
+  _log(log),
+  _public_hand_state(id, stack_size, button),
+  _session_id(session_id),
+  _id(id) {}
 
 template<>
-void SessionHand::handleEvent(seat_t seat, const HoleCardDealEvent& event)
+void HandState::handleEvent(seat_t seat, const HoleCardDealEvent& event)
 {
   _log.record(event);
   for (int i=0; i<HoleCardDealEvent::NUM_CARDS; ++i) {
@@ -24,7 +17,7 @@ void SessionHand::handleEvent(seat_t seat, const HoleCardDealEvent& event)
 }
 
 template<int n>
-void SessionHand::handleEvent(const DealEvent<n>& event)
+void HandState::handleEvent(const DealEvent<n>& event)
 {
   _log.record(event);
 
@@ -42,7 +35,7 @@ void SessionHand::handleEvent(const DealEvent<n>& event)
 }
 
 template<>
-void SessionHand::handleEvent(seat_t seat, const BlindPostEvent& event)
+void HandState::handleEvent(seat_t seat, const BlindPostEvent& event)
 {
   _log.record(event);
   assert(_action_on==seat);
@@ -53,7 +46,7 @@ void SessionHand::handleEvent(seat_t seat, const BlindPostEvent& event)
 }
 
 template<>
-void SessionHand::handleEvent(seat_t seat, const FoldDecision& event)
+void HandState::handleEvent(seat_t seat, const FoldDecision& event)
 {
   _log.record(event);
   assert(_action_on==seat);
@@ -64,7 +57,7 @@ void SessionHand::handleEvent(seat_t seat, const FoldDecision& event)
 }
 
 template<>
-void SessionHand::handleEvent(seat_t seat, const CheckDecision& event)
+void HandState::handleEvent(seat_t seat, const CheckDecision& event)
 {
   _log.record(event);
   assert(_action_on==seat);
@@ -76,7 +69,7 @@ void SessionHand::handleEvent(seat_t seat, const CheckDecision& event)
 }
 
 template<>
-void SessionHand::handleEvent(seat_t seat, const CallDecision& event)
+void HandState::handleEvent(seat_t seat, const CallDecision& event)
 {
   _log.record(event);
   chip_amount_t amount = event.getChipAmount();
@@ -91,7 +84,7 @@ void SessionHand::handleEvent(seat_t seat, const CallDecision& event)
 }
 
 template<>
-void SessionHand::handleEvent(seat_t seat, const BetDecision& event)
+void HandState::handleEvent(seat_t seat, const BetDecision& event)
 {
   _log.record(event);
   assert(_action_on==seat);
@@ -105,7 +98,7 @@ void SessionHand::handleEvent(seat_t seat, const BetDecision& event)
 }
 
 template<>
-void SessionHand::handleEvent(seat_t seat, const RaiseDecision& event)
+void HandState::handleEvent(seat_t seat, const RaiseDecision& event)
 {
   _log.record(event);
   chip_amount_t amount = event.getChipAmount();
