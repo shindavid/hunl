@@ -34,7 +34,7 @@ private:
 public:
   SessionHand(SessionLog& log, chip_amount_t stack_size, seat_t button);
 
-  bool isDone() const { throw std::exception("implement me"); }
+  bool isDone() const { return _folded[0] || _folded[1]; }
   bool isCurrentBettingRoundDone() const { return _is_current_betting_round_done; }
   seat_t getActionOn() const { return _action_on; }
 
