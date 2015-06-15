@@ -13,6 +13,7 @@ private:
   const chip_amount_t _starting_stack_size;  // assume same for both players
   const seat_t _button;
   
+  Player* _players[2];
   chip_amount_t _wagered_prior_rounds[2];
   chip_amount_t _wagered_current_round[2];
   seat_t _action_on;
@@ -31,16 +32,16 @@ private:
   }
 
 public:
-  PublicHandState(session_id_t session_id, hand_id_t id,
-      chip_amount_t starting_stack_size, seat_t button) :
-    _session_id(session_id), _id(id), _starting_stack_size(starting_stack_size), _button(button) {}
+  PublicHandState(Player* p0, Player* p1, session_id_t session_id, hand_id_t id,
+      chip_amount_t starting_stack_size, seat_t button);
   
   bool isDone() const { return _folded[0] || _folded[1]; }
   bool isCurrentBettingRoundDone() const { return _is_current_betting_round_done; }
   seat_t getActionOn() const { return _action_on; }
   session_id_t getSessionID() const { return _session_id; }
   hand_id_t getHandID() const { return _hand_id; }
+  Player* getPlayer(seat_type_t seat) const { return _players[seat]; }
 };
 
-#include "HandStateINLINES.cpp"
+#include "PublicHandStateINLINES.cpp"
 

@@ -26,9 +26,10 @@ void Session::_do_betting_round(HandState& hand_state) {
   while (!public_state.isCurrentBettingRoundDone()) {
     seat_t seat = public_state.getActionOn();
     BettingDecisionRequest request(public_state, seat);
-    BettingDecision_Base decision = _players[seat]->handleBettingDecisionRequest(request);
+    BettingDecision_Base decision = _players[seat]->handleRequest(request);
     request.validate(decision);
     hand_state.handleEvent(seat, decision);
+    hand_state.broadcastEvent(decision);
   }
 }
 
@@ -67,33 +68,39 @@ void _main_loop(HandState& hand_state) {
   }
 
   BlindPostRequest small_blind_request(public_state, _small_blind_size, _button);
-  BlindPostEvent small_blind_post = _players[_button].handleBlindPostRequest(small_blind_request);
+  BlindPostEvent small_blind_post = _players[_button].handleRequest(small_blind_request);
   small_blind_request.validate(small_blind_post);
   hand_state.handleEvent(_button, small_blind_post);
 
   BlindPostRequest big_blind_request(public_state, _big_blind_size, !_button);
-  BlindPostEvent big_blind_post = _players[!_button].handleBlindPostRequest(big_blind_request);
+  BlindPostEvent big_blind_post = _players[!_button].handleRequest(big_blind_request);
   big_blind_request.validate(big_blind_post);
   hand_state.handleEvent(_button, big_blind_post);
 
   _do_betting_round(hand_state);
   if (public_state.isDone()) return;
-  
-  hand_state.handleEvent(FlopDealEvent(public_state, flop));
+ 
+  FlopDealEvent flop_event(public_state, flop);
+  hand_state.handleEvent(flop_event);
+  hand_state.broadcastEvent(flop_event);
+  _do_betting_round(hand_state);
+  if (public_state.isDone()) return;
+
+  TurnDealEvent turn_event(public_state, turn);
+  hand_state.handleEvent(turn_event);
+  hand_state.broadcastEvent(turn_event);
   _do_betting_round(hand_state);
   if (public_state.isDone()) return;
   
-  hand_state.handleEvent(TurnDealEvent(public_state, turn));
-  _do_betting_round(hand_state);
-  if (public_state.isDone()) return;
-  
-  hand_state.handleEvent(RiverDealEvent(public_state, river));
+  RiverDealEvent river_event(public_state, river);
+  hand_state.handleEvent(river_event);
+  hand_state.broadcastEvent(river_event);
   _do_betting_round(hand_state);
 }
 
 void Session::_finish_hand(const HandState& hand_state) {
   /*
-   * TODO: determine winner of hand, update scores
+   * TODO: determine winner of hand, update scores, showdown hands
    */
   throw std::exception("implement me");
 }

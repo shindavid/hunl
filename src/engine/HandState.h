@@ -2,6 +2,7 @@
 
 #include "TypeDefs.h"
 #include "GameEvent.h"
+#include "SessionLog.h"
 #include "pokerstove/peval/CardSet.hpp"
 
 namespace ps = pokerstove;
@@ -22,9 +23,14 @@ public:
 
   const PublicHandState& getPublicState() const { return _public_hand_state; }
 
-  typename<typename E>
-    void handleEvent(seat_t seat, const E& event);
+  typename<typename E> void handleEvent(seat_t seat, const E& event);
+  
+  typename<typename E> void broadcastEvent(seat_t seat, const E& event) {
+    for (seat_type_t seat=0; seat<2; ++seat) {
+      _public_hand_state.getPlayer(seat)->handleEvent(event);
+    }
+  }
 };
 
-#include "SessionHandINLINES.cpp"
+#include "HandStateINLINES.cpp"
 
