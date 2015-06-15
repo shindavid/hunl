@@ -1,7 +1,7 @@
 #pragma once
 
-#include "GameEvent.h"
-#include "TypeDefs.h"
+#include "engine/GameEvent.h"
+#include "engine/TypeDefs.h"
 
 #include <string>
 

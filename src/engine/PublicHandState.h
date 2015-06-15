@@ -1,6 +1,6 @@
 #pragma once
 
-#include "TypeDefs.h"
+#include "engine/TypeDefs.h"
 #include "pokerstove/peval/CardSet.hpp"
 
 /*

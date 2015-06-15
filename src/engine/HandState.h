@@ -1,8 +1,8 @@
 #pragma once
 
-#include "TypeDefs.h"
-#include "GameEvent.h"
-#include "SessionLog.h"
+#include "engine/TypeDefs.h"
+#include "engine/GameEvent.h"
+#include "engine/SessionLog.h"
 #include "pokerstove/peval/CardSet.hpp"
 
 namespace ps = pokerstove;

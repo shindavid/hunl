@@ -1,8 +1,8 @@
 #pragma once
 
 #include "pokerstove/peval/Card.h"
-#include "PublicHandState.h"
-#include "TypeDefs.h"
+#include "engine/PublicHandState.h"
+#include "engine/TypeDefs.h"
 
 namespace ps = pokerstove;
 

@@ -1,8 +1,8 @@
 #pragma once
 
-#include "TypeDefs.h"
-#include "Player.h"
-#include "Deck.h"
+#include "engine/TypeDefs.h"
+#include "engine/Player.h"
+#include "engine/Deck.h"
 #include "pokerstove/peval/CardSet.hpp"
 
 #include <cstdlib>
