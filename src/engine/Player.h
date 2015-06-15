@@ -19,10 +19,10 @@ public:
   player_id_t getID() const { return _id; }
   const char* getName() const { return _name.c_str(); }
 
-  virtual BettingDecision_Base handleRequest(const BettingDecisionRequest& request) = 0;
+  virtual BettingDecision handleRequest(const BettingDecisionRequest& request) = 0;
   virtual BlindPostEvent handleRequest(const BlindPostRequest& request);
   virtual void handleEvent(const HoleCardDealEvent& event) = 0;
-  virtual void handleEvent(const BettingDecision_Base& event) = 0;
+  virtual void handleEvent(const BettingDecision& event) = 0;
   virtual void handleEvent(const FlopDealEvent& event) = 0;
   virtual void handleEvent(const TurnDealEvent& event) = 0;
   virtual void handleEvent(const RiverDealEvent& event) = 0;

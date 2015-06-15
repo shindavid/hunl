@@ -100,38 +100,38 @@ public:
     GameEvent(public_state), DealEvent<3>(&card) {}
 };
 
-class BettingDecision_Base : public GameEvent, public PlayerEvent {
+class BettingDecision : public GameEvent, public PlayerEvent {
 public:
-  BettingDecision_Base(const PublicGameState& public_state, player_id_t player_id) :
+  BettingDecision(const PublicGameState& public_state, player_id_t player_id) :
     GameEvent(public_state), PlayerEvent(player_id) {}
 };
 
 template <action_type_t action_type>
-class BettingDecision : public BettingDecision_Base {
+class BettingDecision_Impl : public BettingDecision {
 private:
   chip_amount_t _chip_amount;
 
 public:
-  BettingDecision(const PublicGameState& public_state, player_id_t player_id, 
+  BettingDecision_Impl(const PublicGameState& public_state, player_id_t player_id, 
       chip_amount_t chip_amount=0) :
-    BettingDecision_Base(public_state, player_id), _chip_amount(chip_amount) {}
+    BettingDecision(public_state, player_id), _chip_amount(chip_amount) {}
   
   chip_amount_t getChipAmount() const { return _chip_amount; }
   static const action_type ACTION_TYPE = action_type;
 };
 
-typedef BettingDecision<ACTION_BET> BetDecision;
-typedef BettingDecision<ACTION_RAISE> RaiseDecision;
-typedef BettingDecision<ACTION_CHECK> CheckDecision;
-typedef BettingDecision<ACTION_CALL> CallDecision;
-typedef BettingDecision<ACTION_FOLD> FoldDecision;
+typedef BettingDecision_Impl<ACTION_BET> BetDecision;
+typedef BettingDecision_Impl<ACTION_RAISE> RaiseDecision;
+typedef BettingDecision_Impl<ACTION_CHECK> CheckDecision;
+typedef BettingDecision_Impl<ACTION_CALL> CallDecision;
+typedef BettingDecision_Impl<ACTION_FOLD> FoldDecision;
 
 class BettingDecisionRequest : public GameEvent, public PlayerEvent {
 public:
   BettingDecisionRequest(const PublicGameState& public_state, player_id_t player_id) :
     GameEvent(public_state), PlayerEvent(player_id) {}
 
-  void validate(const BettingDecision_Base& decision) const;
+  void validate(const BettingDecision& decision) const;
 };
 
 class BlindPostEvent {

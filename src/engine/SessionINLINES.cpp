@@ -26,7 +26,7 @@ void Session::_do_betting_round(HandState& hand_state) {
   while (!public_state.isCurrentBettingRoundDone()) {
     seat_t seat = public_state.getActionOn();
     BettingDecisionRequest request(public_state, seat);
-    BettingDecision_Base decision = _players[seat]->handleRequest(request);
+    BettingDecision decision = _players[seat]->handleRequest(request);
     request.validate(decision);
     hand_state.handleEvent(seat, decision);
     hand_state.broadcastEvent(decision);
