@@ -1,6 +1,7 @@
 PublicHandState::PublicHandState(Player* p0, Player* p1, session_id_t id,
     chip_amount_t starting_stack_size, seat_t button) :
-  _id(id), _starting_stack_size(starting_stack_size), _button(button)
+  _id(id), _starting_stack_size(starting_stack_size), _small_blind_amount(small_blind_amount),
+  _big_blind_amount(big_blind_amount), _button(button)
 {
   _players[0] = p0;
   _players[1] = p1;

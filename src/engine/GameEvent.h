@@ -23,7 +23,7 @@ namespace ps = pokerstove;
  * - CallEvent
  */
 class GameEvent {
-private:
+protected:
   const PublicHandState& _public_state;
   const uint64_t _id;
 
@@ -75,7 +75,7 @@ private:
   player_id_t _player_id;
 
 public:
-  HoleCardDealEvent(const PublicGameState& public_state, 
+  HoleCardDealEvent(const PublicHandState& public_state, 
       player_id_t player_id, ps::Card cards[2]) :
     GameEvent(public_state), DealEvent<2>(cards), _player_id(player_id) {}
   
@@ -84,25 +84,25 @@ public:
 
 class FlopDealEvent : public GameEvent, public DealEvent<3> {
 public:
-  FlopDealEvent(const PublicGameState& public_state, ps::Card cards[3]) :
+  FlopDealEvent(const PublicHandState& public_state, ps::Card cards[3]) :
     GameEvent(public_state), DealEvent<3>(cards) {}
 };
 
 class TurnDealEvent : public GameEvent, public DealEvent<1> {
 public:
-  TurnDealEvent(const PublicGameState& public_state, ps::Card card) :
+  TurnDealEvent(const PublicHandState& public_state, ps::Card card) :
     GameEvent(public_state), DealEvent<3>(&card) {}
 };
 
 class RiverDealEvent : public GameEvent, public DealEvent<1> {
 public:
-  RiverDealEvent(const PublicGameState& public_state, ps::Card card) :
+  RiverDealEvent(const PublicHandState& public_state, ps::Card card) :
     GameEvent(public_state), DealEvent<3>(&card) {}
 };
 
 class BettingDecision : public GameEvent, public PlayerEvent {
 public:
-  BettingDecision(const PublicGameState& public_state, player_id_t player_id) :
+  BettingDecision(const PublicHandState& public_state, player_id_t player_id) :
     GameEvent(public_state), PlayerEvent(player_id) {}
 };
 
@@ -112,7 +112,7 @@ private:
   chip_amount_t _chip_amount;
 
 public:
-  BettingDecision_Impl(const PublicGameState& public_state, player_id_t player_id, 
+  BettingDecision_Impl(const PublicHandState& public_state, player_id_t player_id, 
       chip_amount_t chip_amount=0) :
     BettingDecision(public_state, player_id), _chip_amount(chip_amount) {}
   
@@ -128,10 +128,29 @@ typedef BettingDecision_Impl<ACTION_FOLD> FoldDecision;
 
 class BettingDecisionRequest : public GameEvent, public PlayerEvent {
 public:
-  BettingDecisionRequest(const PublicGameState& public_state, player_id_t player_id) :
+  BettingDecisionRequest(const PublicHandState& public_state, player_id_t player_id) :
     GameEvent(public_state), PlayerEvent(player_id) {}
 
-  void validate(const BettingDecision& decision) const;
+  template<typename Event> void validate(const Event& decision) const;
+  bool facingBet() const;
+  chip_amount_t betAmountFaced() const;  // this is the amount you would call with, only defined if facingBet() == true
+  chip_amount_t minLegalRaiseAmount() const;  // only defined if facingBet() == true
+  chip_amount_t maxLegalRaiseAmount() const;  // only defined if facingBet() == true
+
+  bool canCheck() const { return !facingBet(); }
+
+  bool canBet() const { return !facingBet(); }
+  chip_amount_t minLegalBetAmount() const;
+  chip_amount_t maxLegalBetAmount() const;
+  
+  bool canCall() const { return facingBet(); }
+  chip_amount_t legalCallAmount() const;
+  
+  bool canFold() const { return facingBet(); }
+
+  bool canRaise() const;
+  chip_amount_t minLegalRaiseAmount() const;  // only defined if facingBet() == true
+  chip_amount_t maxLegalRaiseAmount() const;  // only defined if facingBet() == true
 };
 
 class BlindPostEvent {
@@ -139,7 +158,7 @@ private:
   chip_amount_t _amount;
 
 public:
-  BlindPostEvent(const PublicGameState& public_state, player_id_t player_id, chip_amount_t amount) :
+  BlindPostEvent(const PublicHandState& public_state, player_id_t player_id, chip_amount_t amount) :
     GameEvent(public_state), PlayerEvent(player_id), _amount(amount) {}
 
   chip_amount_t getAmount() const { return _amount; }
@@ -150,7 +169,7 @@ private:
   chip_amount_t _amount;
 
 public:
-  BlindPostRequest(const PublicGameState& public_state, player_id_t player_id, chip_amount_t amount) :
+  BlindPostRequest(const PublicHandState& public_state, player_id_t player_id, chip_amount_t amount) :
     GameEvent(public_state), PlayerEvent(player_id), _amount(amount) {}
 
   chip_amount_t getAmount() const { return _amount; }
