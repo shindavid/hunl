@@ -1,7 +1,7 @@
 player_id_t Player::__next_id = 0;
 
 BlindPostEvent Player::handleRequest(const BlindPostRequest& request) {
-  BlindPostEvent event(request.getPublicHandState(), _id, request.getAmount());
+  BlindPostEvent event(request.getPublicHandState(), _id, request.getAmount(), request.getBlindType());
   return event;
 }
 

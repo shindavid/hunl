@@ -31,26 +31,25 @@ public:
   GameEvent(const PublicHandState& public_state) : _public_state(public_state), _id(__next_id++) {}
 
   uint64_t getID() const { return _id; }
-  hand_id_t getHandID() const { return _hand_id; }
   const PublicHandState& getPublicHandState() const { return _public_state; }
 
 private:
   static uint64_t __next_id;
 };
 
-extern uint64_t GameEvent::__next_id = 1;
+uint64_t GameEvent::__next_id = 1;
 
 /*
  * A base class. Any event associated with a specific player.
  */
 class PlayerEvent {
 private:
-  player_id_t _player_id;
+  seat_t _seat;
 
 public:
-  PlayerEvent(player_id_t player_id) : _player_id(player_id) {}
+  PlayerEvent(seat_t seat) : _seat(seat) {}
 
-  player_id_t getPlayerID() const { return _player_id; }
+  seat_t getSeat() const { return _seat; }
 };
 
 template<int n>
@@ -72,14 +71,14 @@ public:
 
 class HoleCardDealEvent : public GameEvent, public DealEvent<2> {
 private:
-  player_id_t _player_id;
+  seat_t _seat;
 
 public:
   HoleCardDealEvent(const PublicHandState& public_state, 
-      player_id_t player_id, ps::Card cards[2]) :
-    GameEvent(public_state), DealEvent<2>(cards), _player_id(player_id) {}
+      seat_t seat, ps::Card cards[2]) :
+    GameEvent(public_state), DealEvent<2>(cards), _seat(seat) {}
   
-  player_id_t getPlayerID() const { return _player_id; }
+  seat_t getSeat() const { return _seat; }
 };
 
 class FlopDealEvent : public GameEvent, public DealEvent<3> {
@@ -102,8 +101,8 @@ public:
 
 class BettingDecision : public GameEvent, public PlayerEvent {
 public:
-  BettingDecision(const PublicHandState& public_state, player_id_t player_id) :
-    GameEvent(public_state), PlayerEvent(player_id) {}
+  BettingDecision(const PublicHandState& public_state, seat_t seat) :
+    GameEvent(public_state), PlayerEvent(seat) {}
 };
 
 template <action_type_t action_type>
@@ -112,9 +111,9 @@ private:
   chip_amount_t _chip_amount;
 
 public:
-  BettingDecision_Impl(const PublicHandState& public_state, player_id_t player_id, 
+  BettingDecision_Impl(const PublicHandState& public_state, seat_t seat, 
       chip_amount_t chip_amount=0) :
-    BettingDecision(public_state, player_id), _chip_amount(chip_amount) {}
+    BettingDecision(public_state, seat), _chip_amount(chip_amount) {}
   
   chip_amount_t getChipAmount() const { return _chip_amount; }
   static const action_type ACTION_TYPE = action_type;
@@ -128,8 +127,8 @@ typedef BettingDecision_Impl<ACTION_FOLD> FoldDecision;
 
 class BettingDecisionRequest : public GameEvent, public PlayerEvent {
 public:
-  BettingDecisionRequest(const PublicHandState& public_state, player_id_t player_id) :
-    GameEvent(public_state), PlayerEvent(player_id) {}
+  BettingDecisionRequest(const PublicHandState& public_state, seat_t seat) :
+    GameEvent(public_state), PlayerEvent(seat) {}
 
   template<typename Event> void validate(const Event& decision) const;
   bool facingBet() const;
@@ -156,30 +155,42 @@ public:
   chip_amount_t legalizeRaise(chip_amount_t amount) const;
 };
 
+enum {
+  SMALL_BLIND,
+  BIG_BLIND
+} BlindType;
+
 class BlindPostEvent {
 private:
-  chip_amount_t _amount;
+  const chip_amount_t _amount;
+  const BlindType _btype;
 
 public:
-  BlindPostEvent(const PublicHandState& public_state, player_id_t player_id, chip_amount_t amount) :
-    GameEvent(public_state), PlayerEvent(player_id), _amount(amount) {}
+  BlindPostEvent(const PublicHandState& public_state, seat_t seat,
+      chip_amount_t amount, BlindType btype) :
+    GameEvent(public_state), PlayerEvent(seat), _amount(amount), _btype(btype) {}
 
   chip_amount_t getAmount() const { return _amount; }
+  BlindType getBlindType() const { return _btype; }
 };
 
 class BlindPostRequest : public GameEvent, public PlayerEvent {
 private:
-  chip_amount_t _amount;
+  const chip_amount_t _amount;
+  const BlindType _btype;
 
 public:
-  BlindPostRequest(const PublicHandState& public_state, player_id_t player_id, chip_amount_t amount) :
-    GameEvent(public_state), PlayerEvent(player_id), _amount(amount) {}
+  BlindPostRequest(const PublicHandState& public_state, seat_t seat,
+      chip_amount_t amount, BlindType btype) :
+    GameEvent(public_state), PlayerEvent(seat), _amount(amount), _btype(btype) {}
 
   chip_amount_t getAmount() const { return _amount; }
 
   void validate(const BlindPostEvent& event) const {
     assert(_amount == event.getAmount());
   }
+  
+  BlindType getBlindType() const { return _btype; }
 };
 
 #include "GameEventINLINES.cpp"

@@ -8,29 +8,35 @@
 namespace ps = pokerstove;
 
 /*
- * A single hand.
+ * Combination of private and public hand state information.
  */
 class HandState {
 private:
   SessionLog& _log;
-  
-  ps::CardSet _hole_cards[2];
   PublicHandState _public_hand_state;
+  ps::CardSet _hole_cards[2];
 
 public:
-  HandState(SessionLog& log, session_id_t session_id, hand_id_t id,
-      chip_amount_t starting_stack_size, seat_t button);
+  HandState(SessionLog& log, const SessionParams& session_params, const SessionState& session_state);
 
   const PublicHandState& getPublicState() const { return _public_hand_state; }
 
   typename<typename E> void handleEvent(seat_t seat, const E& event);
-  
   typename<typename E> void broadcastEvent(seat_t seat, const E& event) {
-    for (seat_type_t seat=0; seat<2; ++seat) {
+    _public_hand_state.getPlayer(seat)->handleEvent(event);
+  }
+  
+  typename<typename E> void handleEvent(seat_t seat, const E& event);
+  typename<typename E> void broadcastEvent(const E& event) {
+    for (seat_t seat=0; seat<2; ++seat) {
       _public_hand_state.getPlayer(seat)->handleEvent(event);
     }
   }
+
+  const ps::CardSet getHoleCards(seat_t seat) const {
+    return _hole_cards[seat];
+  }
 };
 
-#include "HandStateINLINES.cpp"
+#include "engine/HandStateINLINES.cpp"
 

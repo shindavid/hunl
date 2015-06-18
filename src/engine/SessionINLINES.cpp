@@ -1,24 +1,11 @@
 // Included by Session.h
 
-Session::Session(Player* p0, Player* p1, chip_amount_t stack_size, chip_amount_t small_blind_size,
-    chip_amount_t big_blind_size, uint64_t seed)
+Session::Session(Player* p0, Player* p1, chip_amount_t starting_stack_size,
+    chip_amount_t small_blind_size, chip_amount_t big_blind_size, uint64_t base_seed) :
+  _params(__next_id++, p0, p1, starting_stack_size, small_blind_size, big_blind_size)
+  _base_seed(base_seed)
 {
-  _id = __next_id++;
-  _players[0] = p0;
-  _players[1] = p1;
-
-  _stack_size = stack_size;
-  _small_blind_size = small_blind_size;
-  _big_blind_size = big_blind_size;
-
-  assert(_small_blind_size <= _big_blind_size);
-  assert(_big_blind_size <= _stack_size);
-
-  // srand() API is weird, passing in 1 gives you a weird error
-  assert(seed>1);
-  _base_seed = seed;
-  srand(seed);
-  _button = rand() % 2;
+  _log.recordSessionStart(_params, base_seed);
 }
 
 void Session::_do_betting_round(HandState& hand_state) {
@@ -29,15 +16,15 @@ void Session::_do_betting_round(HandState& hand_state) {
     BettingDecision decision = _players[seat]->handleRequest(request);
     request.validate(decision);
     hand_state.handleEvent(seat, decision);
-    hand_state.broadcastEvent(decision);
+    hand_state.broadcastEvent(!seat, decision);
   }
 }
 
 void Session::_init_hand() {
-  _current_hand_id++;
-  _button = !_button;
+  _state.incrementHandID();
+  _state.moveButton();
   
-  uint64_t seed = _base_seed + _current_hand_id;
+  uint64_t seed = _base_seed + _state.getCurrentHandID();
   srand(seed);
   _deck.shuffle();
 }
@@ -61,18 +48,18 @@ void _main_loop(HandState& hand_state) {
   river = _deck.deal();
 
   const PublicHandState& public_state = hand_state.getPublicState();
-  for (int p=0; p<2; ++p) {
-    HoleCardDealEvent hole_card_event(public_state, _players[p]->getID(), holdings[p]);
+  for (seat_t seat=0; seat<2; ++seat) {
+    HoleCardDealEvent hole_card_event(public_state, seat, holdings[p]);
     _players[p].handleEvent(hole_card_event);
     hand_state.handleEvent(p, hole_card_event);
   }
 
-  BlindPostRequest small_blind_request(public_state, _small_blind_size, _button);
+  BlindPostRequest small_blind_request(public_state, _small_blind_size, _button, SMALL_BLIND);
   BlindPostEvent small_blind_post = _players[_button].handleRequest(small_blind_request);
   small_blind_request.validate(small_blind_post);
   hand_state.handleEvent(_button, small_blind_post);
 
-  BlindPostRequest big_blind_request(public_state, _big_blind_size, !_button);
+  BlindPostRequest big_blind_request(public_state, _big_blind_size, !_button, BIG_BLIND);
   BlindPostEvent big_blind_post = _players[!_button].handleRequest(big_blind_request);
   big_blind_request.validate(big_blind_post);
   hand_state.handleEvent(_button, big_blind_post);
@@ -98,17 +85,38 @@ void _main_loop(HandState& hand_state) {
   _do_betting_round(hand_state);
 }
 
-void Session::_finish_hand(const HandState& hand_state) {
+void Session::_award_pot(const PublicHandState& public_state, seat_t seat) {
+  
+}
+
+void Session::_finish_hand(HandState& hand_state) {
+  PublicHandState& phs = hand_state.getPublicState();
+  phs.advanceBettingRound();
+  assert(!phs.hasFolded(0) && !phs.hasFolded(1));
+  assert(phs.getPotSize() == 
+      phs.getAmountWageredPriorRounds(0) + phs.getAmountWageredPriorRounds(1));
+  assert(!phs.hasFolded(0) && !phs.hasFolded(1));
+
+  if (phs.hasFolded(0)) {
+    _award_pot(phs, 1);
+  } else if (phs.hasFolded(1)) {
+    _award_pot(phs, 0);
+  } else {
+    ps::PokerEvaluation eval0 = _evaluator.evaluateHand(hand_state.getHoleCards(0), phs.getBoard());
+    ps::PokerEvaluation eval1 = _evaluator.evaluateHand(hand_state.getHoleCards(1), phs.getBoard());
+    // TODO
+  }
   /*
    * TODO: determine winner of hand, update scores, showdown hands
    */
   throw std::exception("implement me");
 }
 
-void Session::playHand(SessionLog& log) {
+void Session::playHand() {
   _init_hand();
 
-  HandState hand_state(log, _current_hand_id, _stack_size, _button);
+  HandState hand_state(_log, _params, _state);
+  _log.recordHandStart(_state);
   _main_loop(hand_state);
   _finish_hand(hand_state);
 }

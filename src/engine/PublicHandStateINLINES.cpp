@@ -1,10 +1,8 @@
-PublicHandState::PublicHandState(Player* p0, Player* p1, session_id_t id,
-    chip_amount_t starting_stack_size, seat_t button) :
-  _id(id), _starting_stack_size(starting_stack_size), _small_blind_amount(small_blind_amount),
-  _big_blind_amount(big_blind_amount), _button(button)
+PublicHandState::PublicHandState(const SessionParams& session_params, 
+    const SessionState& session_state) :
+  _session_params(session_params),
+  _session_state(session_state)
 {
-  _players[0] = p0;
-  _players[1] = p1;
   for (seat_type_t seat=0; seat<2; ++seat) {
     _wagered_current_round[seat] = 0;
     _wagered_prior_rounds[seat] = 0;
@@ -23,3 +21,31 @@ chip_amount_t PublicHandState::getPotSize() const {
   return pot;
 }
 
+bool PublicHandState::validate_chip_amounts() const {
+  return (_wagered_prior_rounds[0] + _wagered_current_round[0] <= _get_starting_stack_size()) &&
+    (_wagered_prior_rounds[1] + _wagered_current_round[1] <= _get_starting_stack_size());
+}
+
+void PublicHandState::setFolded(seat_t seat) {
+  _folded[seat] = true;
+  _is_current_betting_round_done = true;
+}
+
+void PublicHandState::add(ps::Card card) {
+  _board.insert(card);
+  _board_cards.push_back(card);
+}
+
+void PublicHandState::advanceBettingRound() {
+  for (seat_t seat=0; seat<2; ++seat) {
+    _wagered_prior_rounds[seat] += _wagered_current_round[seat];
+    _wagered_current_round[seat] = 0;
+  }
+  
+  _action_on = !_session_state.getButton();
+  _is_current_betting_round_done = isAllIn(0) || isAllIn(1);  // technically only need to test 1
+}
+
+bool PublicHandState::isAllIn(seat_t seat) const {
+  return _wagered_prior_rounds[seat] + _wagered_current_round[seat] == _get_starting_stack_size();
+}
