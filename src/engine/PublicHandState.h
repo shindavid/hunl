@@ -53,6 +53,9 @@ public:
     return _starting_stack_size - _wagered_current_round[seat] - _wagered_prior_rounds[seat];
   }
 
+  chip_amount_t getPotentialPotSize() const;  // if current bet called
+  chip_amount_t getPotSize() const;
+
   chip_amount_t getStartingStackSize() const { return _starting_stack_size; }
   chip_amount_t getSmallBlindAmount() const { return _small_blind_amount; }
   chip_amount_t getBigBlindAmount() const { return _big_blind_amount; }

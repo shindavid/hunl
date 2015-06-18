@@ -69,3 +69,11 @@ chip_amount_t BettingDecisionRequest::maxLegalBetAmount() const {
   return _public_state.getRemainingChips();
 }
 
+chip_amount_t BettingDecisionRequest::legalizeBet(chip_amount_t amount) const {
+  return std::max(std::min(amount, maxLegalBetAmount()), minLegalBetAmount());
+}
+
+chip_amount_t BettingDecisionRequest::legalizeRaise(chip_amount_t amount) const {
+  return std::max(std::min(amount, maxLegalRaiseAmount()), minLegalRaiseAmount());
+}
+

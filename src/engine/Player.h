@@ -10,6 +10,13 @@ private:
   player_id_t _id;  // eventually retrieve from a database
   std::string _name;
 
+protected:
+  CheckDecision _create_check(const BettingDecisionRequest& request);
+  CallDecision _create_call(const BettingDecisionRequest& request);
+  FoldDecision _create_fold(const BettingDecisionRequest& request);
+  BetDecision _create_bet(const BettingDecisionRequest& request, chip_amount_t amount);
+  RaiseDecision _create_raise(const BettingDecisionRequest& request, chip_amount_t amount);
+
 public:
   Player(const char* name) {
     _id = __next_id++;
@@ -21,11 +28,11 @@ public:
 
   virtual BettingDecision handleRequest(const BettingDecisionRequest& request) = 0;
   virtual BlindPostEvent handleRequest(const BlindPostRequest& request);
-  virtual void handleEvent(const HoleCardDealEvent& event) = 0;
-  virtual void handleEvent(const BettingDecision& event) = 0;
-  virtual void handleEvent(const FlopDealEvent& event) = 0;
-  virtual void handleEvent(const TurnDealEvent& event) = 0;
-  virtual void handleEvent(const RiverDealEvent& event) = 0;
+  virtual void handleEvent(const HoleCardDealEvent& event) {};
+  virtual void handleEvent(const BettingDecision& event) {};
+  virtual void handleEvent(const FlopDealEvent& event) {};
+  virtual void handleEvent(const TurnDealEvent& event) {};
+  virtual void handleEvent(const RiverDealEvent& event) {};
 
 private:
   static player_id_t __next_id;

@@ -13,3 +13,13 @@ PublicHandState::PublicHandState(Player* p0, Player* p1, session_id_t id,
   _action_on = button;
   _is_current_betting_round_done = false;
 }
+  
+chip_amount_t PublicHandState::getPotSize() const {
+  chip_amount_t pot = 0;
+  for (seat_type_t seat=0; seat<2; ++seat) {
+    pot += _wagered_current_round[seat];
+    pot += _wagered_prior_rounds[seat];
+  }
+  return pot;
+}
+

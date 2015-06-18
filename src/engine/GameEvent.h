@@ -151,6 +151,9 @@ public:
   bool canRaise() const;
   chip_amount_t minLegalRaiseAmount() const;  // only defined if facingBet() == true
   chip_amount_t maxLegalRaiseAmount() const;  // only defined if facingBet() == true
+
+  chip_amount_t legalizeBet(chip_amount_t amount) const;
+  chip_amount_t legalizeRaise(chip_amount_t amount) const;
 };
 
 class BlindPostEvent {
