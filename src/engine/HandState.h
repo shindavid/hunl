@@ -15,6 +15,7 @@ private:
   SessionLog& _log;
   PublicHandState _public_hand_state;
   ps::CardSet _hole_cards[2];
+  ps::Card _hole_cards_ordered[2][2];
 
 public:
   HandState(SessionLog& log, const SessionParams& session_params, const SessionState& session_state);
@@ -35,6 +36,10 @@ public:
 
   const ps::CardSet getHoleCards(seat_t seat) const {
     return _hole_cards[seat];
+  }
+  
+  const ps::CardSet getHoleCard(seat_t seat, int i) const {
+    return _hole_cards_ordered[seat][i];
   }
 };
 

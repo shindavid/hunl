@@ -35,7 +35,8 @@ private:
   void _main_loop(SessionHand& hand);
   void _finish_hand(SessionHand& hand);
   void _do_betting_round(SessionHand& hand);
-  void _award_pot(const PublicHandState& public_state, seat_t seat);
+  void _award_pot(const HandState& public_state, seat_t seat);
+  void _split_pot(const HandState& public_state);
 
 public:
   Session(Player* p0, Player* p1, chip_amount_t stack_size, chip_amount_t small_blind_size,

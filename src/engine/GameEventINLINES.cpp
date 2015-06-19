@@ -77,3 +77,16 @@ chip_amount_t BettingDecisionRequest::legalizeRaise(chip_amount_t amount) const 
   return std::max(std::min(amount, maxLegalRaiseAmount()), minLegalRaiseAmount());
 }
 
+chip_amount_t PotWinEvent::getCalledPotSize() const {
+  return 2 * _public_state.getAmountWageredPriorRounds(!getSeat());
+}
+
+chip_amount_t PotWinEvent::getUncalledBetSize() const {
+  return _public_state.getAmountWageredPriorRounds(getSeat()) -
+    _public_state.getAmountWageredPriorRounds(!getSeat());
+}
+
+chip_amount_t PotSplitEvent::getSplitAmount() const {
+  return _public_state.getAmountWageredPriorRounds(0);
+}
+

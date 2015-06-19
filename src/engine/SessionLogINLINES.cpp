@@ -12,7 +12,7 @@ void SessionLog::recordHandStart(const SessionState& state) {
 }
 
 void SessionLog::record(const HoleCardDealEvent& event) {
-  fprintf(stdout, "Dealt to %s: [%s][%s]\n",
+  fprintf(stdout, "Dealt to %s: [%s %s]\n",
       event.getPublicHandState().getPlayer(event.getSeat())->getName(),
       event.getCard(0).str().c_str(), event.getCard(1).str().c_str());
 }
@@ -59,12 +59,6 @@ void SessionLog::record(const CheckEvent& event) {
 }
 
 void SessionLog::record(const CallEvent& event) {
-  fprintf(stdout, "%s calls $%d.\n", 
-      event.getPublicHandState().getPlayer(event.getSeat())->getName(),
-      event.getAmount());
-}
-
-void SessionLog::record(const CallEvent& event) {
   fprintf(stdout, "%s calls $%d%s.\n", 
       event.getPublicHandState().getPlayer(event.getSeat())->getName(),
       event.getAmount(),
@@ -83,5 +77,30 @@ void SessionLog::record(const RaiseEvent& event) {
       event.getPublicHandState().getPlayer(event.getSeat())->getName(),
       event.getAmount(),
       event.getPublicHandState().isAllIn(event.getSeat()) ? " (all-in)" : "");
+}
+
+void SessionLog::record(const ShowdownEvent& event) {
+  fprintf(stdout, "%s shows [%s %s] (%s).\n", 
+      event.getPublicHandState().getPlayer(event.getSeat())->getName(),
+      event.getCard(0), event.getCard(1), event.getEvaluation().str().c_str());
+}
+
+void SessionLog::record(const PotWinEvent& event) {
+  fprintf(stdout, "%s wins pot of %d", 
+      event.getPublicHandState().getPlayer(event.getSeat())->getName(),
+      event.getCalledPotSize());
+  chip_amount_t uncalled = event.getUncalledBetSize();
+  if (uncalled) {
+    fprintf(stdout, " (uncalled %d returned)", uncalled);
+  }
+  fprintf(stdout, ".\n");
+}
+
+void SessionLog::record(const PotSplitEvent& event) {
+  fprintf(stdout, "%s and %s each win split pot of %d.", 
+      event.getPublicHandState().getPlayer(!event.getPublicHandState().getButton())->getName(),
+      event.getPublicHandState().getPlayer(event.getPublicHandState().getButton())->getName(),
+      event.getSplitAmount());
+
 }
 

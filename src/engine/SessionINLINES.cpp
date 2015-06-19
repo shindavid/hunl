@@ -85,8 +85,29 @@ void _main_loop(HandState& hand_state) {
   _do_betting_round(hand_state);
 }
 
-void Session::_award_pot(const PublicHandState& public_state, seat_t seat) {
+void Session::_award_pot(const HandState& hand_state, seat_t seat) {
+  const PublicHandState& public_state = hand_state.getPublicState();
   
+  chip_amount_t net_gain = public_state.getPotSize() - public_state.getAmountWageredPriorRounds(seat);
+  chip_amount_t net_loss = - public_state.getAmountWageredPriorRounds(!seat);
+
+  assert(net_gain + net_loss == 0);
+  _state.updateScore(seat, net_gain);
+  _state.updateScore(!seat, net_loss);
+
+  PotWinEvent win_event(public_state, seat);
+  hand_state.broadcastEvent(win_event);
+  _log.record(win_event);
+}
+
+void Session::_split_pot(const HandState& hand_state) {
+  const PublicHandState& public_state = hand_state.getPublicState();
+  
+  // no change to scores
+  
+  PotSplitEvent split_event(public_state);
+  hand_state.broadcastEvent(split_event);
+  _log.record(split_event);
 }
 
 void Session::_finish_hand(HandState& hand_state) {
@@ -98,18 +119,30 @@ void Session::_finish_hand(HandState& hand_state) {
   assert(!phs.hasFolded(0) && !phs.hasFolded(1));
 
   if (phs.hasFolded(0)) {
-    _award_pot(phs, 1);
+    _award_pot(hand_state, 1);
   } else if (phs.hasFolded(1)) {
-    _award_pot(phs, 0);
+    _award_pot(hand_state, 0);
   } else {
-    ps::PokerEvaluation eval0 = _evaluator.evaluateHand(hand_state.getHoleCards(0), phs.getBoard());
-    ps::PokerEvaluation eval1 = _evaluator.evaluateHand(hand_state.getHoleCards(1), phs.getBoard());
-    // TODO
+    ps::PokerEvaluation evals[2];
+    seat_t showdown_order[2] = {!phs.getButton(), phs.getButton()};
+    for (int i=0; i<2; ++it) {
+      seat_t seat = showdown_order[i];
+      ps::CardSet holding = hand_state.getHoleCards(seat);
+      ps::PokerEvaluation eval = _evaluator.evaluateHand(holding, phs.getBoard());
+      evals[seat] = eval;
+      ShowdownEvent showdown_event(phs, hand_state.getHoleCard(seat,0), hand_state.getHoleCard(seat,1),
+          eval, seat);
+      hand_state.broadcastEvent(!seat, showdown_event);
+      _log.record(showdown_event);
+    }
+    if (evals[0] > evals[1]) {
+      _award_pot(hand_state, 0);
+    } else if (evals[0] < evals[1]) {
+      _award_pot(hand_state, 1);
+    } else {
+      _split_pot(hand_state);
+    }
   }
-  /*
-   * TODO: determine winner of hand, update scores, showdown hands
-   */
-  throw std::exception("implement me");
 }
 
 void Session::playHand() {

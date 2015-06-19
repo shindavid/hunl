@@ -13,6 +13,16 @@ public:
   void record(const FlopDealEvent& event);
   void record(const TurnDealEvent& event);
   void record(const RiverDealEvent& event);
+  
+  void record(const FoldEvent& event);
+  void record(const CheckEvent& event);
+  void record(const CallEvent& event);
+  void record(const BetEvent& event);
+  void record(const RaiseEvent& event);
+  
+  void record(const ShowdownEvent& event);
+  void record(const PotWinEvent& event);
+  void record(const PotSplitEvent& event);
 };
 
-#include "SessionLogINLINES.cpp"
+#include "engine/SessionLogINLINES.cpp"

@@ -11,6 +11,7 @@ void HandState::handleEvent(seat_t seat, const HoleCardDealEvent& event)
 {
   for (int i=0; i<HoleCardDealEvent::NUM_CARDS; ++i) {
     _hole_cards[seat].insert(event.getCard(i));
+    _hole_cards_ordered[seat][i] = event.getCard(i);
   }
   _log.record(event);
 }

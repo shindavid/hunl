@@ -33,6 +33,9 @@ public:
   virtual void handleEvent(const FlopDealEvent& event) {};
   virtual void handleEvent(const TurnDealEvent& event) {};
   virtual void handleEvent(const RiverDealEvent& event) {};
+  virtual void handleEvent(const ShowdownEvent& event) {};
+  virtual void handleEvent(const PotWinEvent& event) {};
+  virtual void handleEvent(const PotSplitEvent& event) {};
 
 private:
   static player_id_t __next_id;

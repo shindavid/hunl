@@ -193,5 +193,46 @@ public:
   BlindType getBlindType() const { return _btype; }
 };
 
-#include "GameEventINLINES.cpp"
+class ShowdownEvent : public GameEvent, public PlayerEvent {
+private:
+  ps::Card _hole_cards[2];
+  ps::PokerEvaluation _eval;
+
+public:
+  ShowdownEvent(const PublicHandState& public_state, ps::Card c0, ps::Card c1,
+      ps::PokerEvaluation eval, seat_t seat) :
+    GameEvent(public_state), PlayerEvent(seat), _eval(eval), _seat(seat)
+  {
+    _hole_cards[0] = c0;
+    _hole_cards[1] = c1;
+  }
+
+  ps::Card getCard(int i) const { return _hole_cards[i]; }
+  ps::PokerEvaluation getEvaluation() const { return _eval; }
+};
+
+class PotWinEvent : public GameEvent, public PlayerEvent {
+public:
+  PotWinEvent(const PublicHandState& public_state, seat_t seat) :
+    GameEvent(public_state), PlayerEvent(seat), _pot_size(public_state.getPotSize())
+  {
+    assert(getCalledPotSize() + getUncalledBetSize() == public_state.getPotSize());
+  }
+
+  chip_amount_t getCalledPotSize() const;
+  chip_amount_t getUncalledBetSize() const;
+};
+
+class PotSplitEvent : public GameEvent {
+public:
+  PotWinEvent(const PublicHandState& public_state) :
+    GameEvent(public_state)
+  {
+    assert(2*getSplitAmount() == public_state.getPotSize());
+  }
+
+  chip_amount_t getSplitAmount() const;
+};
+
+#include "engine/GameEventINLINES.cpp"
 
