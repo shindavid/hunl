@@ -7,7 +7,7 @@ typedef uint64_t session_id_t;
 typedef uint64_t player_id_t;
 typedef uint64_t hand_id_t;
 typedef uint32_t chip_amount_t;
-typedef bool seat_t;
+typedef uint8_t seat_t;
 
 enum action_type_t {
   ACTION_BET,

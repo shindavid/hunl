@@ -56,16 +56,15 @@ void Session::_main_loop(HandState& hand_state) {
   }
 
   seat_t button = _state.getButton();
-  BlindPostRequest small_blind_request(public_state, _params.getSmallBlindSize(),
-      button, SMALL_BLIND);
+  BlindPostRequest small_blind_request(public_state, button, _params.getSmallBlindSize(), SMALL_BLIND);
   BlindPostEvent small_blind_post = _params.getPlayer(button)->handleRequest(small_blind_request);
   small_blind_request.validate(small_blind_post);
   hand_state.handleEvent(button, small_blind_post);
 
-  BlindPostRequest big_blind_request(public_state, _params.getBigBlindSize(), !button, BIG_BLIND);
+  BlindPostRequest big_blind_request(public_state, !button, _params.getBigBlindSize(), BIG_BLIND);
   BlindPostEvent big_blind_post = _params.getPlayer(!button)->handleRequest(big_blind_request);
   big_blind_request.validate(big_blind_post);
-  hand_state.handleEvent(button, big_blind_post);
+  hand_state.handleEvent(!button, big_blind_post);
 
   _do_betting_round(hand_state);
   if (public_state.isDone()) return;
