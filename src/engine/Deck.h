@@ -1,6 +1,7 @@
 #pragma once
 
 #include <algorithm>
+#include <boost/array.hpp>
 #include "pokerstove/peval/Card.h"
 
 namespace ps = pokerstove;
@@ -43,7 +44,6 @@ public:
 
     ps::Card deal ()
     {
-        assert(ncards);
         _current -= 1;
         ps::Card card = _deck[_current];
         return card;
@@ -57,7 +57,7 @@ public:
 
 private:
     // these are the data which track info about the deck
-    ps::Card _deck[DECK_SIZE];
+    boost::array<ps::Card,DECK_SIZE> _deck;
     size_t _current;
 };
 

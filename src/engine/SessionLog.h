@@ -14,11 +14,12 @@ public:
   void record(const TurnDealEvent& event);
   void record(const RiverDealEvent& event);
   
-  void record(const FoldEvent& event);
-  void record(const CheckEvent& event);
-  void record(const CallEvent& event);
-  void record(const BetEvent& event);
-  void record(const RaiseEvent& event);
+  void record(const BlindPostEvent& event);
+  void record(const FoldDecision& event);
+  void record(const CheckDecision& event);
+  void record(const CallDecision& event);
+  void record(const BetDecision& event);
+  void record(const RaiseDecision& event);
   
   void record(const ShowdownEvent& event);
   void record(const PotWinEvent& event);

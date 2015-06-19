@@ -1,11 +1,13 @@
 #pragma once
 
-typedef probability_t float;
-typedef session_id_t uint64_t;
-typedef player_id_t uint64_t;
-typedef hand_id_t uint64_t;
-typedef chip_amount_t int32_t;
-typedef seat_t bool;
+#include <cstdint>
+
+typedef float probability_t;
+typedef uint64_t session_id_t;
+typedef uint64_t player_id_t;
+typedef uint64_t hand_id_t;
+typedef uint32_t chip_amount_t;
+typedef bool seat_t;
 
 enum action_type_t {
   ACTION_BET,
@@ -13,5 +15,10 @@ enum action_type_t {
   ACTION_CHECK,
   ACTION_CALL,
   ACTION_FOLD
+};
+
+enum BlindType {
+  SMALL_BLIND,
+  BIG_BLIND
 };
 

@@ -90,13 +90,13 @@ public:
 class TurnDealEvent : public GameEvent, public DealEvent<1> {
 public:
   TurnDealEvent(const PublicHandState& public_state, ps::Card card) :
-    GameEvent(public_state), DealEvent<3>(&card) {}
+    GameEvent(public_state), DealEvent<1>(&card) {}
 };
 
 class RiverDealEvent : public GameEvent, public DealEvent<1> {
 public:
   RiverDealEvent(const PublicHandState& public_state, ps::Card card) :
-    GameEvent(public_state), DealEvent<3>(&card) {}
+    GameEvent(public_state), DealEvent<1>(&card) {}
 };
 
 class BettingDecision : public GameEvent, public PlayerEvent {
@@ -116,7 +116,7 @@ public:
     BettingDecision(public_state, seat), _chip_amount(chip_amount) {}
   
   chip_amount_t getChipAmount() const { return _chip_amount; }
-  static const action_type ACTION_TYPE = action_type;
+  static const action_type_t ACTION_TYPE = action_type;
 };
 
 typedef BettingDecision_Impl<ACTION_BET> BetDecision;
@@ -133,8 +133,6 @@ public:
   template<typename Event> void validate(const Event& decision) const;
   bool facingBet() const;
   chip_amount_t betAmountFaced() const;  // this is the amount you would call with, only defined if facingBet() == true
-  chip_amount_t minLegalRaiseAmount() const;  // only defined if facingBet() == true
-  chip_amount_t maxLegalRaiseAmount() const;  // only defined if facingBet() == true
 
   bool canCheck() const { return !facingBet(); }
 
@@ -155,12 +153,7 @@ public:
   chip_amount_t legalizeRaise(chip_amount_t amount) const;
 };
 
-enum {
-  SMALL_BLIND,
-  BIG_BLIND
-} BlindType;
-
-class BlindPostEvent {
+class BlindPostEvent : public GameEvent, public PlayerEvent {
 private:
   const chip_amount_t _amount;
   const BlindType _btype;
@@ -201,7 +194,7 @@ private:
 public:
   ShowdownEvent(const PublicHandState& public_state, ps::Card c0, ps::Card c1,
       ps::PokerEvaluation eval, seat_t seat) :
-    GameEvent(public_state), PlayerEvent(seat), _eval(eval), _seat(seat)
+    GameEvent(public_state), PlayerEvent(seat), _eval(eval)
   {
     _hole_cards[0] = c0;
     _hole_cards[1] = c1;
@@ -214,7 +207,7 @@ public:
 class PotWinEvent : public GameEvent, public PlayerEvent {
 public:
   PotWinEvent(const PublicHandState& public_state, seat_t seat) :
-    GameEvent(public_state), PlayerEvent(seat), _pot_size(public_state.getPotSize())
+    GameEvent(public_state), PlayerEvent(seat)
   {
     assert(getCalledPotSize() + getUncalledBetSize() == public_state.getPotSize());
   }
@@ -225,7 +218,7 @@ public:
 
 class PotSplitEvent : public GameEvent {
 public:
-  PotWinEvent(const PublicHandState& public_state) :
+  PotSplitEvent(const PublicHandState& public_state) :
     GameEvent(public_state)
   {
     assert(2*getSplitAmount() == public_state.getPotSize());

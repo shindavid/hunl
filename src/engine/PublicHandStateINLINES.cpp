@@ -3,18 +3,18 @@ PublicHandState::PublicHandState(const SessionParams& session_params,
   _session_params(session_params),
   _session_state(session_state)
 {
-  for (seat_type_t seat=0; seat<2; ++seat) {
+  for (seat_t seat=0; seat<2; ++seat) {
     _wagered_current_round[seat] = 0;
     _wagered_prior_rounds[seat] = 0;
     _folded[seat] = false;
   }
-  _action_on = button;
+  _action_on = session_state.getButton();
   _is_current_betting_round_done = false;
 }
   
 chip_amount_t PublicHandState::getPotSize() const {
   chip_amount_t pot = 0;
-  for (seat_type_t seat=0; seat<2; ++seat) {
+  for (seat_t seat=0; seat<2; ++seat) {
     pot += _wagered_current_round[seat];
     pot += _wagered_prior_rounds[seat];
   }

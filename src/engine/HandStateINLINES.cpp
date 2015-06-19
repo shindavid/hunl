@@ -32,7 +32,7 @@ void HandState::handleEvent(seat_t seat, const BlindPostEvent& event)
 {
   seat_t action_on = _public_hand_state.getActionOn();
   assert(action_on==seat);
-  chip_amount_t amount = event.getPostAmount();
+  chip_amount_t amount = event.getAmount();
   _public_hand_state.addWagerCurrentRound(seat, amount);
   _public_hand_state.setActionOn(!action_on);
   assert(_public_hand_state.validate_chip_amounts());
@@ -60,7 +60,7 @@ void HandState::handleEvent(seat_t seat, const CheckDecision& event)
   assert(_public_hand_state.getAmountWageredCurrentRound(seat) == 0);
   assert(_public_hand_state.getAmountWageredCurrentRound(!seat) == 0);
   _public_hand_state.setActionOn(!action_on);
-  _public_hand_state.setCurrentBettingRoundDone(_action_on == _button);
+  _public_hand_state.setCurrentBettingRoundDone(action_on == _public_hand_state.getButton());
   assert(_public_hand_state.validate_chip_amounts());
   _log.record(event);
 }

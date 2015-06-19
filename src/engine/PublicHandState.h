@@ -3,7 +3,10 @@
 #include "engine/TypeDefs.h"
 #include "engine/SessionState.h"
 #include "engine/SessionParams.h"
-#include "pokerstove/peval/CardSet.hpp"
+#include "pokerstove/peval/CardSet.h"
+#include "pokerstove/peval/Card.h"
+
+namespace ps = pokerstove;
 
 /*
  * Hand state, only the public part of it.
@@ -22,10 +25,13 @@ protected:
   ps::CardSet _board;
   std::vector<ps::Card> _board_cards;  // maintains ordering
 
-  chip_amount_t _get_starting_stack_size() const { return _session_params.getStartinStackSize(); }
+  chip_amount_t _get_starting_stack_size() const { return _session_params.getStartingStackSize(); }
 
 public:
   PublicHandState(const SessionParams& session_params, const SessionState& session_state);
+  
+  Player* getPlayer(seat_t seat) const { return _session_params.getPlayer(seat); }
+  seat_t getButton() const { return _session_state.getButton(); }
   
   bool isDone() const { return _folded[0] || _folded[1]; }
   bool isCurrentBettingRoundDone() const { return _is_current_betting_round_done; }
@@ -35,7 +41,7 @@ public:
   void setActionOn(seat_t seat) { _action_on = seat; }
   
   bool hasFolded(seat_t seat) const { return _folded[seat]; }
-  void setFolded(seat_t seat) { _folded[seat] = true; }
+  void setFolded(seat_t seat);
 
   chip_amount_t getAmountWageredPriorRounds(seat_t seat) const {
     return _wagered_prior_rounds[seat];

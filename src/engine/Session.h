@@ -1,10 +1,11 @@
 #pragma once
 
-#include "engine/TypeDefs.h"
-#include "engine/Player.h"
 #include "engine/Deck.h"
+#include "engine/HandState.h"
+#include "engine/Player.h"
 #include "engine/SessionLog.h"
 #include "engine/SessionParams.h"
+#include "engine/TypeDefs.h"
 #include "pokerstove/peval/CardSet.h"
 #include "pokerstove/peval/HoldemHandEvaluator.h"
 
@@ -17,7 +18,7 @@ class Session : public SessionParams {
 private:
   ps::HoldemHandEvaluator _evaluator;
   SessionLog _log;
-  SessionParams _params;
+  const SessionParams _params;
   SessionState _state;
   Deck _deck;
   
@@ -32,9 +33,9 @@ private:
   const uint64_t _base_seed;
 
   void _init_hand();
-  void _main_loop(SessionHand& hand);
-  void _finish_hand(SessionHand& hand);
-  void _do_betting_round(SessionHand& hand);
+  void _main_loop(HandState& hand);
+  void _finish_hand(HandState& hand);
+  void _do_betting_round(HandState& hand);
   void _award_pot(const HandState& public_state, seat_t seat);
   void _split_pot(const HandState& public_state);
 

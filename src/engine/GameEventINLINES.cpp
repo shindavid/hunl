@@ -30,31 +30,32 @@ void BettingDecisionRequest::validate<FoldDecision>(const FoldDecision& decision
 }
 
 bool BettingDecisionRequest::facingBet() const {
-  seat_type_t action_on = _public_state.getActionOn();
+  seat_t action_on = _public_state.getActionOn();
   return _public_state.getAmountWageredCurrentRound(!action_on) >
     _public_state.getAmountWageredCurrentRound(action_on);
 }
 
 chip_amount_t BettingDecisionRequest::betAmountFaced() const {
-  seat_type_t action_on = _public_state.getActionOn();
+  seat_t action_on = _public_state.getActionOn();
   return _public_state.getAmountWageredCurrentRound(!action_on) -
     _public_state.getAmountWageredCurrentRound(action_on);
 }
 
 chip_amount_t BettingDecisionRequest::minLegalRaiseAmount() const {
   chip_amount_t call_amount = betAmountFaced();
-  chip_amount_t min_additional_amount = std::max(call_amount, _public_state.getBigBlindAmount());
+  chip_amount_t min_additional_amount = std::max(call_amount,
+      _public_state.getSessionParams().getBigBlindSize());
   chip_amount_t min_raise_amount = call_amount + min_additional_amount;
 
   return std::min(min_raise_amount, maxLegalRaiseAmount());
 }
 
 chip_amount_t BettingDecisionRequest::maxLegalRaiseAmount() const {
-  return _public_state.getRemainingChips();
+  return _public_state.getRemainingChips(getSeat());
 }
 
 chip_amount_t BettingDecisionRequest::legalCallAmount() const {
-  return std::min(betAmountFaced(), _public_state.getRemainingChips());
+  return std::min(betAmountFaced(), _public_state.getRemainingChips(getSeat()));
 }
 
 bool BettingDecisionRequest::canRaise() const {
@@ -62,11 +63,12 @@ bool BettingDecisionRequest::canRaise() const {
 }
 
 chip_amount_t BettingDecisionRequest::minLegalBetAmount() const {
-  return std::min(_public_state.getRemainingChips(), _public_state.getBigBlindAmount());
+  return std::min(_public_state.getRemainingChips(getSeat()),
+      _public_state.getSessionParams().getBigBlindSize());
 }
 
 chip_amount_t BettingDecisionRequest::maxLegalBetAmount() const {
-  return _public_state.getRemainingChips();
+  return _public_state.getRemainingChips(getSeat());
 }
 
 chip_amount_t BettingDecisionRequest::legalizeBet(chip_amount_t amount) const {
