@@ -2,9 +2,10 @@
 
 Session::Session(Player* p0, Player* p1, chip_amount_t starting_stack_size,
     chip_amount_t small_blind_size, chip_amount_t big_blind_size, uint64_t base_seed) :
-  _params(__next_id++, p0, p1, starting_stack_size, small_blind_size, big_blind_size)
+  _params(__next_id, p0, p1, starting_stack_size, small_blind_size, big_blind_size),
   _base_seed(base_seed)
 {
+  __next_id++;
   _log.recordSessionStart(_params, base_seed);
 }
 
@@ -13,7 +14,7 @@ void Session::_do_betting_round(HandState& hand_state) {
   while (!public_state.isCurrentBettingRoundDone()) {
     seat_t seat = public_state.getActionOn();
     BettingDecisionRequest request(public_state, seat);
-    BettingDecision decision = _players[seat]->handleRequest(request);
+    BettingDecision decision = _params.getPlayer(seat)->handleRequest(request);
     request.validate(decision);
     hand_state.handleEvent(seat, decision);
     hand_state.broadcastEvent(!seat, decision);
@@ -29,7 +30,7 @@ void Session::_init_hand() {
   _deck.shuffle();
 }
 
-void _main_loop(HandState& hand_state) {
+void Session::_main_loop(HandState& hand_state) {
   // Pre-deal cards before any of the Player's start calling rand()
   ps::Card holdings[2][2];
   ps::Card flop[3];
@@ -49,20 +50,22 @@ void _main_loop(HandState& hand_state) {
 
   const PublicHandState& public_state = hand_state.getPublicState();
   for (seat_t seat=0; seat<2; ++seat) {
-    HoleCardDealEvent hole_card_event(public_state, seat, holdings[p]);
-    _players[p].handleEvent(hole_card_event);
-    hand_state.handleEvent(p, hole_card_event);
+    HoleCardDealEvent hole_card_event(public_state, seat, holdings[seat]);
+    _params.getPlayer(seat)->handleEvent(hole_card_event);
+    hand_state.handleEvent(seat, hole_card_event);
   }
 
-  BlindPostRequest small_blind_request(public_state, _small_blind_size, _button, SMALL_BLIND);
-  BlindPostEvent small_blind_post = _players[_button].handleRequest(small_blind_request);
+  seat_t button = _state.getButton();
+  BlindPostRequest small_blind_request(public_state, _params.getSmallBlindSize(),
+      button, SMALL_BLIND);
+  BlindPostEvent small_blind_post = _params.getPlayer(button)->handleRequest(small_blind_request);
   small_blind_request.validate(small_blind_post);
-  hand_state.handleEvent(_button, small_blind_post);
+  hand_state.handleEvent(button, small_blind_post);
 
-  BlindPostRequest big_blind_request(public_state, _big_blind_size, !_button, BIG_BLIND);
-  BlindPostEvent big_blind_post = _players[!_button].handleRequest(big_blind_request);
+  BlindPostRequest big_blind_request(public_state, _params.getBigBlindSize(), !button, BIG_BLIND);
+  BlindPostEvent big_blind_post = _params.getPlayer(!button)->handleRequest(big_blind_request);
   big_blind_request.validate(big_blind_post);
-  hand_state.handleEvent(_button, big_blind_post);
+  hand_state.handleEvent(button, big_blind_post);
 
   _do_betting_round(hand_state);
   if (public_state.isDone()) return;
@@ -125,10 +128,10 @@ void Session::_finish_hand(HandState& hand_state) {
   } else {
     ps::PokerEvaluation evals[2];
     seat_t showdown_order[2] = {!phs.getButton(), phs.getButton()};
-    for (int i=0; i<2; ++it) {
+    for (int i=0; i<2; ++i) {
       seat_t seat = showdown_order[i];
       ps::CardSet holding = hand_state.getHoleCards(seat);
-      ps::PokerEvaluation eval = _evaluator.evaluateHand(holding, phs.getBoard());
+      ps::PokerEvaluation eval = _evaluator.evaluateHand(holding, phs.getBoard()).high();
       evals[seat] = eval;
       ShowdownEvent showdown_event(phs, hand_state.getHoleCard(seat,0), hand_state.getHoleCard(seat,1),
           eval, seat);

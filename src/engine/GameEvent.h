@@ -103,6 +103,11 @@ class BettingDecision : public GameEvent, public PlayerEvent {
 public:
   BettingDecision(const PublicHandState& public_state, seat_t seat) :
     GameEvent(public_state), PlayerEvent(seat) {}
+
+  virtual action_type_t getActionType() const {
+    fprintf(stderr, "Something is wrong.\n");
+    throw std::exception();
+  }
 };
 
 template <action_type_t action_type>
@@ -117,6 +122,8 @@ public:
   
   chip_amount_t getChipAmount() const { return _chip_amount; }
   static const action_type_t ACTION_TYPE = action_type;
+  
+  virtual action_type_t getActionType() const { return action_type; }
 };
 
 typedef BettingDecision_Impl<ACTION_BET> BetDecision;
@@ -126,11 +133,18 @@ typedef BettingDecision_Impl<ACTION_CALL> CallDecision;
 typedef BettingDecision_Impl<ACTION_FOLD> FoldDecision;
 
 class BettingDecisionRequest : public GameEvent, public PlayerEvent {
+private:
+  void _validate(const BetDecision& decision) const;
+  void _validate(const RaiseDecision& decision) const;
+  void _validate(const CheckDecision& decision) const;
+  void _validate(const CallDecision& decision) const;
+  void _validate(const FoldDecision& decision) const;
 public:
   BettingDecisionRequest(const PublicHandState& public_state, seat_t seat) :
     GameEvent(public_state), PlayerEvent(seat) {}
 
-  template<typename Event> void validate(const Event& decision) const;
+  void validate(const BettingDecision& decision);
+  
   bool facingBet() const;
   chip_amount_t betAmountFaced() const;  // this is the amount you would call with, only defined if facingBet() == true
 
@@ -151,6 +165,9 @@ public:
 
   chip_amount_t legalizeBet(chip_amount_t amount) const;
   chip_amount_t legalizeRaise(chip_amount_t amount) const;
+  
+  chip_amount_t getPotSize() const { return _public_state.getPotSize(); }
+  chip_amount_t getPotentialPotSize() const { return _public_state.getPotentialPotSize(); }
 };
 
 class BlindPostEvent : public GameEvent, public PlayerEvent {

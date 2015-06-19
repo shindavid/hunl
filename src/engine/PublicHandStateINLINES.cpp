@@ -12,6 +12,15 @@ PublicHandState::PublicHandState(const SessionParams& session_params,
   _is_current_betting_round_done = false;
 }
   
+chip_amount_t PublicHandState::getPotentialPotSize() const {
+  chip_amount_t pot = 0;
+  for (seat_t seat=0; seat<2; ++seat) {
+    pot += _wagered_prior_rounds[seat];
+  }
+  pot += std::max(_wagered_current_round[0], _wagered_current_round[1]);
+  return pot;
+}
+
 chip_amount_t PublicHandState::getPotSize() const {
   chip_amount_t pot = 0;
   for (seat_t seat=0; seat<2; ++seat) {

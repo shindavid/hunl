@@ -16,10 +16,29 @@ void HandState::handleEvent(seat_t seat, const HoleCardDealEvent& event)
   _log.record(event);
 }
 
-template<int n>
-void HandState::handleEvent(const DealEvent<n>& event)
+void HandState::handleEvent(const FlopDealEvent& event)
 {
-  for (int i=0; i<n; ++i) {
+  for (int i=0; i<FlopDealEvent::NUM_CARDS; ++i) {
+    _public_hand_state.add(event.getCard(i));
+  }
+
+  _public_hand_state.advanceBettingRound();
+  _log.record(event);
+}
+
+void HandState::handleEvent(const TurnDealEvent& event)
+{
+  for (int i=0; i<TurnDealEvent::NUM_CARDS; ++i) {
+    _public_hand_state.add(event.getCard(i));
+  }
+
+  _public_hand_state.advanceBettingRound();
+  _log.record(event);
+}
+
+void HandState::handleEvent(const RiverDealEvent& event)
+{
+  for (int i=0; i<RiverDealEvent::NUM_CARDS; ++i) {
     _public_hand_state.add(event.getCard(i));
   }
 
@@ -40,7 +59,18 @@ void HandState::handleEvent(seat_t seat, const BlindPostEvent& event)
 }
 
 template<>
-void HandState::handleEvent(seat_t seat, const FoldDecision& event)
+void HandState::handleEvent(seat_t seat, const BettingDecision& event)
+{
+  switch (event.getActionType()) {
+    case ACTION_BET: _handleEvent(seat, *((const BetDecision*)&event));
+    case ACTION_RAISE: _handleEvent(seat, *((const RaiseDecision*)&event));
+    case ACTION_CHECK: _handleEvent(seat, *((const CheckDecision*)&event));
+    case ACTION_CALL: _handleEvent(seat, *((const CallDecision*)&event));
+    case ACTION_FOLD: _handleEvent(seat, *((const FoldDecision*)&event));
+  }
+}
+
+void HandState::_handleEvent(seat_t seat, const FoldDecision& event)
 {
   seat_t action_on = _public_hand_state.getActionOn();
   assert(action_on==seat);
@@ -52,8 +82,7 @@ void HandState::handleEvent(seat_t seat, const FoldDecision& event)
   _log.record(event);
 }
 
-template<>
-void HandState::handleEvent(seat_t seat, const CheckDecision& event)
+void HandState::_handleEvent(seat_t seat, const CheckDecision& event)
 {
   seat_t action_on = _public_hand_state.getActionOn();
   assert(action_on==seat);
@@ -65,8 +94,7 @@ void HandState::handleEvent(seat_t seat, const CheckDecision& event)
   _log.record(event);
 }
 
-template<>
-void HandState::handleEvent(seat_t seat, const CallDecision& event)
+void HandState::_handleEvent(seat_t seat, const CallDecision& event)
 {
   chip_amount_t amount = event.getChipAmount();
   
@@ -82,8 +110,7 @@ void HandState::handleEvent(seat_t seat, const CallDecision& event)
   _log.record(event);
 }
 
-template<>
-void HandState::handleEvent(seat_t seat, const BetDecision& event)
+void HandState::_handleEvent(seat_t seat, const BetDecision& event)
 {
   seat_t action_on = _public_hand_state.getActionOn();
   
@@ -98,8 +125,7 @@ void HandState::handleEvent(seat_t seat, const BetDecision& event)
   _log.record(event);
 }
 
-template<>
-void HandState::handleEvent(seat_t seat, const RaiseDecision& event)
+void HandState::_handleEvent(seat_t seat, const RaiseDecision& event)
 {
   seat_t action_on = _public_hand_state.getActionOn();
   chip_amount_t amount = event.getChipAmount();

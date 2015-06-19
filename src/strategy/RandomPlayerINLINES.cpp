@@ -1,7 +1,7 @@
 
-virtual BettingDecision RandomPlayer::handleRequest(const BettingDecisionRequest& request) {
+BettingDecision RandomPlayer::handleRequest(const BettingDecisionRequest& request) {
   if (request.canCheck()) {
-    CanCheckResponse choice = (CanCheckResponse)_check_dice.roll();
+    random_params_t::CanCheckResponse choice = (random_params_t::CanCheckResponse)_check_dice.roll();
     switch (choice) {
       case random_params_t::CHECK:
         return _create_check(request);
@@ -17,7 +17,7 @@ virtual BettingDecision RandomPlayer::handleRequest(const BettingDecisionRequest
         return _create_check(request);  // shouldn't get here
     }
   } else {  // canCall
-    CanCallResponse choice = (CanCallResponse)_call_dice.roll();
+    random_params_t::CanCallResponse choice = (random_params_t::CanCallResponse)_call_dice.roll();
     switch (choice) {
       case random_params_t::FOLD:
         return _create_fold(request);

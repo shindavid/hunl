@@ -14,7 +14,7 @@
 
 namespace ps = pokerstove;
 
-class Session : public SessionParams {
+class Session {
 private:
   ps::HoldemHandEvaluator _evaluator;
   SessionLog _log;
@@ -51,6 +51,8 @@ public:
 private:
   static session_id_t __next_id;
 };
+
+session_id_t Session::__next_id = 0;
 
 #include "engine/SessionINLINES.cpp"
 

@@ -1,31 +1,35 @@
+void BettingDecisionRequest::validate(const BettingDecision& decision) {
+  switch (decision.getActionType()) {
+    case ACTION_BET: _validate(*((const BetDecision*)&decision));
+    case ACTION_RAISE: _validate(*((const RaiseDecision*)&decision));
+    case ACTION_CHECK: _validate(*((const CheckDecision*)&decision));
+    case ACTION_CALL: _validate(*((const CallDecision*)&decision));
+    case ACTION_FOLD: _validate(*((const FoldDecision*)&decision));
+  }
+}
 
-template<>
-void BettingDecisionRequest::validate<BetDecision>(const BetDecision& decision) const {
+void BettingDecisionRequest::_validate(const BetDecision& decision) const {
   assert(canBet());
   assert(decision.getChipAmount() >= minLegalBetAmount());
   assert(decision.getChipAmount() <= maxLegalBetAmount());
 }
 
-template<>
-void BettingDecisionRequest::validate<RaiseDecision>(const RaiseDecision& decision) const {
+void BettingDecisionRequest::_validate(const RaiseDecision& decision) const {
   assert(canRaise());
   assert(decision.getChipAmount() >= minLegalRaiseAmount());
   assert(decision.getChipAmount() <= maxLegalRaiseAmount());
 }
 
-template<>
-void BettingDecisionRequest::validate<CheckDecision>(const CheckDecision& decision) const {
+void BettingDecisionRequest::_validate(const CheckDecision& decision) const {
   assert(canCheck());
 }
 
-template<>
-void BettingDecisionRequest::validate<CallDecision>(const CallDecision& decision) const {
+void BettingDecisionRequest::_validate(const CallDecision& decision) const {
   assert(canCall());
   assert(decision.getChipAmount() == legalCallAmount());
 }
 
-template<>
-void BettingDecisionRequest::validate<FoldDecision>(const FoldDecision& decision) const {
+void BettingDecisionRequest::_validate(const FoldDecision& decision) const {
   assert(canFold());
 }
 
