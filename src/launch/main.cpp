@@ -22,8 +22,8 @@ int main() {
   RandomPlayer bryan(params, "Bryan");
 
   chip_amount_t stack_size = 1000;
-  chip_amount_t small_blind_size = 10;
-  chip_amount_t big_blind_size = 20;
+  chip_amount_t small_blind_size = 5;
+  chip_amount_t big_blind_size = 10;
   uint64_t seed = 100;
   Session session(&david, &bryan, stack_size, small_blind_size, big_blind_size, seed);
 
