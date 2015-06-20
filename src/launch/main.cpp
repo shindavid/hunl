@@ -18,8 +18,8 @@ int main() {
   params._call_probs[random_params_t::POT_SIZED_RAISE] = 0.07;
   params._call_probs[random_params_t::ALL_IN_RAISE] = 0.03;
 
-  RandomPlayer david(params, "david");
-  RandomPlayer bryan(params, "bryan");
+  RandomPlayer david(params, "David");
+  RandomPlayer bryan(params, "Bryan");
 
   chip_amount_t stack_size = 1000;
   chip_amount_t small_blind_size = 10;
