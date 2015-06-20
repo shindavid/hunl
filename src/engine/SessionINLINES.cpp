@@ -150,7 +150,7 @@ void Session::playHand() {
   _init_hand();
 
   HandState hand_state(_log, _params, _state);
-  _log.recordHandStart(_state);
+  _log.recordHandStart(hand_state.getPublicState());
   _main_loop(hand_state);
   _finish_hand(hand_state);
 }

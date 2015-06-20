@@ -9,9 +9,15 @@ void SessionLog::recordSessionStart(const SessionParams& params, uint64_t base_s
       base_seed);
 }
 
-void SessionLog::recordHandStart(const SessionState& state) {
+void SessionLog::recordHandStart(const PublicHandState& state) {
   fprintf(stdout, "**********************************\n");
-  fprintf(stdout, "Hand #%lu\n", state.getCurrentHandID());
+  fprintf(stdout, "Hand #%lu\n", state.getSessionState().getCurrentHandID());
+  for (seat_t seat=0; seat<2; ++seat) {
+    chip_amount_t score = state.getSessionState().getScore(seat);
+    fprintf(stdout, "%s score: %s$%d\n",
+      state.getPlayer(seat)->getName(),
+      score==0 ? "" : (score>0 ? "+" : "-"), abs(score));
+  }
 }
 
 template<>
@@ -117,7 +123,7 @@ void SessionLog::record(const PotWinEvent* event) {
 
 template<>
 void SessionLog::record(const PotSplitEvent* event) {
-  fprintf(stdout, "%s and %s each win split pot of $%d.", 
+  fprintf(stdout, "%s and %s each win split pot of $%d.\n", 
       event->getPublicHandState().getPlayer(!event->getPublicHandState().getButton())->getName(),
       event->getPublicHandState().getPlayer(event->getPublicHandState().getButton())->getName(),
       event->getSplitAmount());
