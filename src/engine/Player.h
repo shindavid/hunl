@@ -11,11 +11,11 @@ private:
   std::string _name;
 
 protected:
-  CheckDecision _create_check(const BettingDecisionRequest& request);
-  CallDecision _create_call(const BettingDecisionRequest& request);
-  FoldDecision _create_fold(const BettingDecisionRequest& request);
-  BetDecision _create_bet(const BettingDecisionRequest& request, chip_amount_t amount);
-  RaiseDecision _create_raise(const BettingDecisionRequest& request, chip_amount_t amount);
+  CheckDecision_ptr _create_check(const BettingDecisionRequest* request);
+  CallDecision_ptr _create_call(const BettingDecisionRequest* request);
+  FoldDecision_ptr _create_fold(const BettingDecisionRequest* request);
+  BetDecision_ptr _create_bet(const BettingDecisionRequest* request, chip_amount_t amount);
+  RaiseDecision_ptr _create_raise(const BettingDecisionRequest* request, chip_amount_t amount);
 
 public:
   Player(const char* name) {
@@ -26,16 +26,17 @@ public:
   player_id_t getID() const { return _id; }
   const char* getName() const { return _name.c_str(); }
 
-  virtual BettingDecision handleRequest(const BettingDecisionRequest& request) = 0;
-  virtual BlindPostEvent handleRequest(const BlindPostRequest& request);
-  virtual void handleEvent(const HoleCardDealEvent& event) {};
-  virtual void handleEvent(const BettingDecision& event) {};
-  virtual void handleEvent(const FlopDealEvent& event) {};
-  virtual void handleEvent(const TurnDealEvent& event) {};
-  virtual void handleEvent(const RiverDealEvent& event) {};
-  virtual void handleEvent(const ShowdownEvent& event) {};
-  virtual void handleEvent(const PotWinEvent& event) {};
-  virtual void handleEvent(const PotSplitEvent& event) {};
+  virtual BettingDecision_ptr handleRequest(const BettingDecisionRequest* request) = 0;
+  virtual BlindPostEvent_ptr handleRequest(const BlindPostRequest* request);
+
+  virtual void handleEvent(const HoleCardDealEvent* event) {};
+  virtual void handleEvent(const BettingDecision* event) {};
+  virtual void handleEvent(const FlopDealEvent* event) {};
+  virtual void handleEvent(const TurnDealEvent* event) {};
+  virtual void handleEvent(const RiverDealEvent* event) {};
+  virtual void handleEvent(const ShowdownEvent* event) {};
+  virtual void handleEvent(const PotWinEvent* event) {};
+  virtual void handleEvent(const PotSplitEvent* event) {};
 
 private:
   static player_id_t __next_id;

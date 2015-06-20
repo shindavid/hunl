@@ -14,96 +14,109 @@ void SessionLog::recordHandStart(const SessionState& state) {
   fprintf(stdout, "Hand #%lu\n", state.getCurrentHandID());
 }
 
-void SessionLog::record(const HoleCardDealEvent& event) {
+template<>
+void SessionLog::record(const HoleCardDealEvent* event) {
   fprintf(stdout, "Dealt to %s: [%s %s]\n",
-      event.getPublicHandState().getPlayer(event.getSeat())->getName(),
-      event.getCard(0).str().c_str(), event.getCard(1).str().c_str());
+      event->getPublicHandState().getPlayer(event->getSeat())->getName(),
+      event->getCard(0).str().c_str(), event->getCard(1).str().c_str());
 }
 
-void SessionLog::record(const BlindPostEvent& event) {
+template<>
+void SessionLog::record(const BlindPostEvent* event) {
   fprintf(stdout, "%s posts %cB ($%d).\n",
-      event.getPublicHandState().getPlayer(event.getSeat())->getName(),
-      event.getBlindType() == SMALL_BLIND ? 'S' : 'B',
-      event.getAmount());
+      event->getPublicHandState().getPlayer(event->getSeat())->getName(),
+      event->getBlindType() == SMALL_BLIND ? 'S' : 'B',
+      event->getAmount());
 }
 
-void SessionLog::record(const FlopDealEvent& event) {
+template<>
+void SessionLog::record(const FlopDealEvent* event) {
   fprintf(stdout, "Flop: [%s %s %s]\n",
-      event.getPublicHandState().getBoardCard(0).str().c_str(),
-      event.getPublicHandState().getBoardCard(1).str().c_str(),
-      event.getPublicHandState().getBoardCard(2).str().c_str());
+      event->getPublicHandState().getBoardCard(0).str().c_str(),
+      event->getPublicHandState().getBoardCard(1).str().c_str(),
+      event->getPublicHandState().getBoardCard(2).str().c_str());
 }
 
-void SessionLog::record(const TurnDealEvent& event) {
+template<>
+void SessionLog::record(const TurnDealEvent* event) {
   fprintf(stdout, "Turn: [%s %s %s][%s]\n",
-      event.getPublicHandState().getBoardCard(0).str().c_str(),
-      event.getPublicHandState().getBoardCard(1).str().c_str(),
-      event.getPublicHandState().getBoardCard(2).str().c_str(),
-      event.getPublicHandState().getBoardCard(3).str().c_str());
+      event->getPublicHandState().getBoardCard(0).str().c_str(),
+      event->getPublicHandState().getBoardCard(1).str().c_str(),
+      event->getPublicHandState().getBoardCard(2).str().c_str(),
+      event->getPublicHandState().getBoardCard(3).str().c_str());
 }
 
-void SessionLog::record(const RiverDealEvent& event) {
+template<>
+void SessionLog::record(const RiverDealEvent* event) {
   fprintf(stdout, "River: [%s %s %s][%s][%s]\n",
-      event.getPublicHandState().getBoardCard(0).str().c_str(),
-      event.getPublicHandState().getBoardCard(1).str().c_str(),
-      event.getPublicHandState().getBoardCard(2).str().c_str(),
-      event.getPublicHandState().getBoardCard(3).str().c_str(),
-      event.getPublicHandState().getBoardCard(4).str().c_str());
+      event->getPublicHandState().getBoardCard(0).str().c_str(),
+      event->getPublicHandState().getBoardCard(1).str().c_str(),
+      event->getPublicHandState().getBoardCard(2).str().c_str(),
+      event->getPublicHandState().getBoardCard(3).str().c_str(),
+      event->getPublicHandState().getBoardCard(4).str().c_str());
 }
 
-void SessionLog::record(const FoldDecision& event) {
+template<>
+void SessionLog::record(const FoldDecision* event) {
   fprintf(stdout, "%s folds.\n", 
-      event.getPublicHandState().getPlayer(event.getSeat())->getName());
+      event->getPublicHandState().getPlayer(event->getSeat())->getName());
 }
 
-void SessionLog::record(const CheckDecision& event) {
+template<>
+void SessionLog::record(const CheckDecision* event) {
   fprintf(stdout, "%s checks.\n", 
-      event.getPublicHandState().getPlayer(event.getSeat())->getName());
+      event->getPublicHandState().getPlayer(event->getSeat())->getName());
 }
 
-void SessionLog::record(const CallDecision& event) {
+template<>
+void SessionLog::record(const CallDecision* event) {
   fprintf(stdout, "%s calls $%d%s.\n", 
-      event.getPublicHandState().getPlayer(event.getSeat())->getName(),
-      event.getChipAmount(),
-      event.getPublicHandState().isAllIn(event.getSeat()) ? " (all-in)" : "");
+      event->getPublicHandState().getPlayer(event->getSeat())->getName(),
+      event->getChipAmount(),
+      event->getPublicHandState().isAllIn(event->getSeat()) ? " (all-in)" : "");
 }
 
-void SessionLog::record(const BetDecision& event) {
+template<>
+void SessionLog::record(const BetDecision* event) {
   fprintf(stdout, "%s bets $%d%s.\n", 
-      event.getPublicHandState().getPlayer(event.getSeat())->getName(),
-      event.getChipAmount(),
-      event.getPublicHandState().isAllIn(event.getSeat()) ? " (all-in)" : "");
+      event->getPublicHandState().getPlayer(event->getSeat())->getName(),
+      event->getChipAmount(),
+      event->getPublicHandState().isAllIn(event->getSeat()) ? " (all-in)" : "");
 }
 
-void SessionLog::record(const RaiseDecision& event) {
+template<>
+void SessionLog::record(const RaiseDecision* event) {
   fprintf(stdout, "%s raises to $%d%s.\n", 
-      event.getPublicHandState().getPlayer(event.getSeat())->getName(),
-      event.getChipAmount(),
-      event.getPublicHandState().isAllIn(event.getSeat()) ? " (all-in)" : "");
+      event->getPublicHandState().getPlayer(event->getSeat())->getName(),
+      event->getChipAmount(),
+      event->getPublicHandState().isAllIn(event->getSeat()) ? " (all-in)" : "");
 }
 
-void SessionLog::record(const ShowdownEvent& event) {
+template<>
+void SessionLog::record(const ShowdownEvent* event) {
   fprintf(stdout, "%s shows [%s %s] (%s).\n", 
-      event.getPublicHandState().getPlayer(event.getSeat())->getName(),
-      event.getCard(0).str().c_str(), event.getCard(1).str().c_str(),
-      event.getEvaluation().str().c_str());
+      event->getPublicHandState().getPlayer(event->getSeat())->getName(),
+      event->getCard(0).str().c_str(), event->getCard(1).str().c_str(),
+      event->getEvaluation().str().c_str());
 }
 
-void SessionLog::record(const PotWinEvent& event) {
+template<>
+void SessionLog::record(const PotWinEvent* event) {
   fprintf(stdout, "%s wins pot of %d", 
-      event.getPublicHandState().getPlayer(event.getSeat())->getName(),
-      event.getCalledPotSize());
-  chip_amount_t uncalled = event.getUncalledBetSize();
+      event->getPublicHandState().getPlayer(event->getSeat())->getName(),
+      event->getCalledPotSize());
+  chip_amount_t uncalled = event->getUncalledBetSize();
   if (uncalled) {
     fprintf(stdout, " (uncalled %d returned)", uncalled);
   }
   fprintf(stdout, ".\n");
 }
 
-void SessionLog::record(const PotSplitEvent& event) {
+template<>
+void SessionLog::record(const PotSplitEvent* event) {
   fprintf(stdout, "%s and %s each win split pot of %d.", 
-      event.getPublicHandState().getPlayer(!event.getPublicHandState().getButton())->getName(),
-      event.getPublicHandState().getPlayer(event.getPublicHandState().getButton())->getName(),
-      event.getSplitAmount());
+      event->getPublicHandState().getPlayer(!event->getPublicHandState().getButton())->getName(),
+      event->getPublicHandState().getPlayer(event->getPublicHandState().getButton())->getName(),
+      event->getSplitAmount());
 }
 

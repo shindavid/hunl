@@ -7,39 +7,20 @@ HandState::HandState(SessionLog& log, const SessionParams& session_params,
 {}
 
 template<>
-void HandState::handleEvent(seat_t seat, const HoleCardDealEvent& event)
+void HandState::handleEvent(seat_t seat, const HoleCardDealEvent* event)
 {
   for (int i=0; i<HoleCardDealEvent::NUM_CARDS; ++i) {
-    _hole_cards[seat].insert(event.getCard(i));
-    _hole_cards_ordered[seat][i] = event.getCard(i);
+    _hole_cards[seat].insert(event->getCard(i));
+    _hole_cards_ordered[seat][i] = event->getCard(i);
   }
   _log.record(event);
 }
 
-void HandState::handleEvent(const FlopDealEvent& event)
+template<>
+void HandState::handleEvent(const FlopDealEvent* event)
 {
   for (int i=0; i<FlopDealEvent::NUM_CARDS; ++i) {
-    _public_hand_state.add(event.getCard(i));
-  }
-
-  _public_hand_state.advanceBettingRound();
-  _log.record(event);
-}
-
-void HandState::handleEvent(const TurnDealEvent& event)
-{
-  for (int i=0; i<TurnDealEvent::NUM_CARDS; ++i) {
-    _public_hand_state.add(event.getCard(i));
-  }
-
-  _public_hand_state.advanceBettingRound();
-  _log.record(event);
-}
-
-void HandState::handleEvent(const RiverDealEvent& event)
-{
-  for (int i=0; i<RiverDealEvent::NUM_CARDS; ++i) {
-    _public_hand_state.add(event.getCard(i));
+    _public_hand_state.add(event->getCard(i));
   }
 
   _public_hand_state.advanceBettingRound();
@@ -47,11 +28,33 @@ void HandState::handleEvent(const RiverDealEvent& event)
 }
 
 template<>
-void HandState::handleEvent(seat_t seat, const BlindPostEvent& event)
+void HandState::handleEvent(const TurnDealEvent* event)
+{
+  for (int i=0; i<TurnDealEvent::NUM_CARDS; ++i) {
+    _public_hand_state.add(event->getCard(i));
+  }
+
+  _public_hand_state.advanceBettingRound();
+  _log.record(event);
+}
+
+template<>
+void HandState::handleEvent(const RiverDealEvent* event)
+{
+  for (int i=0; i<RiverDealEvent::NUM_CARDS; ++i) {
+    _public_hand_state.add(event->getCard(i));
+  }
+
+  _public_hand_state.advanceBettingRound();
+  _log.record(event);
+}
+
+template<>
+void HandState::handleEvent(seat_t seat, const BlindPostEvent* event)
 {
   seat_t action_on = _public_hand_state.getActionOn();
   assert(action_on==seat);
-  chip_amount_t amount = event.getAmount();
+  chip_amount_t amount = event->getAmount();
   _public_hand_state.addWagerCurrentRound(seat, amount);
   _public_hand_state.setActionOn(!action_on);
   assert(_public_hand_state.validate_chip_amounts());
@@ -59,18 +62,7 @@ void HandState::handleEvent(seat_t seat, const BlindPostEvent& event)
 }
 
 template<>
-void HandState::handleEvent(seat_t seat, const BettingDecision& event)
-{
-  switch (event.getActionType()) {
-    case ACTION_BET: _handleEvent(seat, *((const BetDecision*)&event));
-    case ACTION_RAISE: _handleEvent(seat, *((const RaiseDecision*)&event));
-    case ACTION_CHECK: _handleEvent(seat, *((const CheckDecision*)&event));
-    case ACTION_CALL: _handleEvent(seat, *((const CallDecision*)&event));
-    case ACTION_FOLD: _handleEvent(seat, *((const FoldDecision*)&event));
-  }
-}
-
-void HandState::_handleEvent(seat_t seat, const FoldDecision& event)
+void HandState::handleEvent(seat_t seat, const FoldDecision* event)
 {
   seat_t action_on = _public_hand_state.getActionOn();
   assert(action_on==seat);
@@ -82,7 +74,8 @@ void HandState::_handleEvent(seat_t seat, const FoldDecision& event)
   _log.record(event);
 }
 
-void HandState::_handleEvent(seat_t seat, const CheckDecision& event)
+template<>
+void HandState::handleEvent(seat_t seat, const CheckDecision* event)
 {
   seat_t action_on = _public_hand_state.getActionOn();
   assert(action_on==seat);
@@ -94,9 +87,10 @@ void HandState::_handleEvent(seat_t seat, const CheckDecision& event)
   _log.record(event);
 }
 
-void HandState::_handleEvent(seat_t seat, const CallDecision& event)
+template<>
+void HandState::handleEvent(seat_t seat, const CallDecision* event)
 {
-  chip_amount_t amount = event.getChipAmount();
+  chip_amount_t amount = event->getChipAmount();
   
   seat_t action_on = _public_hand_state.getActionOn();
   assert(action_on==seat);
@@ -110,7 +104,8 @@ void HandState::_handleEvent(seat_t seat, const CallDecision& event)
   _log.record(event);
 }
 
-void HandState::_handleEvent(seat_t seat, const BetDecision& event)
+template<>
+void HandState::handleEvent(seat_t seat, const BetDecision* event)
 {
   seat_t action_on = _public_hand_state.getActionOn();
   
@@ -118,17 +113,18 @@ void HandState::_handleEvent(seat_t seat, const BetDecision& event)
   assert(_public_hand_state.getAmountWageredCurrentRound(seat) == 0);
   assert(_public_hand_state.getAmountWageredCurrentRound(!seat) == 0);
 
-  chip_amount_t amount = event.getChipAmount();
+  chip_amount_t amount = event->getChipAmount();
   _public_hand_state.addWagerCurrentRound(seat, amount);
   _public_hand_state.setActionOn(!action_on);
   assert(_public_hand_state.validate_chip_amounts());
   _log.record(event);
 }
 
-void HandState::_handleEvent(seat_t seat, const RaiseDecision& event)
+template<>
+void HandState::handleEvent(seat_t seat, const RaiseDecision* event)
 {
   seat_t action_on = _public_hand_state.getActionOn();
-  chip_amount_t amount = event.getChipAmount();
+  chip_amount_t amount = event->getChipAmount();
   chip_amount_t opp_wager_amount_current_round =
     _public_hand_state.getAmountWageredCurrentRound(!seat);
   chip_amount_t delta = amount - opp_wager_amount_current_round;
@@ -144,5 +140,15 @@ void HandState::_handleEvent(seat_t seat, const RaiseDecision& event)
   _public_hand_state.setActionOn(!action_on);
   assert(_public_hand_state.validate_chip_amounts());
   _log.record(event);
+}
+
+template<>
+void HandState::handleEvent(seat_t seat, const BettingDecision* event)
+{
+  if (const BetDecision* bet = dynamic_cast<const BetDecision*>(event)) { handleEvent(seat, bet); return; }
+  if (const CallDecision* call = dynamic_cast<const CallDecision*>(event)) { handleEvent(seat, call); return; }
+  if (const CheckDecision* check = dynamic_cast<const CheckDecision*>(event)) { handleEvent(seat, check); return; }
+  if (const FoldDecision* fold = dynamic_cast<const FoldDecision*>(event)) { handleEvent(seat, fold); return; }
+  if (const RaiseDecision* raise = dynamic_cast<const RaiseDecision*>(event)) { handleEvent(seat, raise); return; }
 }
 

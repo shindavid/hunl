@@ -14,10 +14,10 @@ void Session::_do_betting_round(HandState& hand_state) {
   while (!public_state.isCurrentBettingRoundDone()) {
     seat_t seat = public_state.getActionOn();
     BettingDecisionRequest request(public_state, seat);
-    BettingDecision decision = _params.getPlayer(seat)->handleRequest(request);
-    request.validate(decision);
-    hand_state.handleEvent(seat, decision);
-    hand_state.broadcastEvent(!seat, decision);
+    BettingDecision_ptr decision = _params.getPlayer(seat)->handleRequest(&request);
+    request.validate(decision.get());
+    hand_state.handleEvent(seat, decision.get());
+    hand_state.broadcastEvent(!seat, decision.get());
   }
 }
 
@@ -36,6 +36,7 @@ void Session::_main_loop(HandState& hand_state) {
   ps::Card flop[3];
   ps::Card turn;
   ps::Card river;
+  fprintf(stdout, "%s:%d\n", __FILE__, __LINE__);
 
   for (int p=0; p<2; ++p) {
     for (int i=0; i<2; ++i ) {
@@ -48,42 +49,48 @@ void Session::_main_loop(HandState& hand_state) {
   turn = _deck.deal();
   river = _deck.deal();
 
+  fprintf(stdout, "%s:%d\n", __FILE__, __LINE__);
   const PublicHandState& public_state = hand_state.getPublicState();
   for (seat_t seat=0; seat<2; ++seat) {
     HoleCardDealEvent hole_card_event(public_state, seat, holdings[seat]);
-    _params.getPlayer(seat)->handleEvent(hole_card_event);
-    hand_state.handleEvent(seat, hole_card_event);
+    _params.getPlayer(seat)->handleEvent(&hole_card_event);
+    hand_state.handleEvent(seat, &hole_card_event);
   }
 
+  fprintf(stdout, "%s:%d\n", __FILE__, __LINE__);
   seat_t button = _state.getButton();
   BlindPostRequest small_blind_request(public_state, button, _params.getSmallBlindSize(), SMALL_BLIND);
-  BlindPostEvent small_blind_post = _params.getPlayer(button)->handleRequest(small_blind_request);
-  small_blind_request.validate(small_blind_post);
-  hand_state.handleEvent(button, small_blind_post);
+  BlindPostEvent_ptr small_blind_post = _params.getPlayer(button)->handleRequest(&small_blind_request);
+  small_blind_request.validate(small_blind_post.get());
+  hand_state.handleEvent(button, small_blind_post.get());
 
   BlindPostRequest big_blind_request(public_state, !button, _params.getBigBlindSize(), BIG_BLIND);
-  BlindPostEvent big_blind_post = _params.getPlayer(!button)->handleRequest(big_blind_request);
-  big_blind_request.validate(big_blind_post);
-  hand_state.handleEvent(!button, big_blind_post);
+  BlindPostEvent_ptr big_blind_post = _params.getPlayer(!button)->handleRequest(&big_blind_request);
+  big_blind_request.validate(big_blind_post.get());
+  hand_state.handleEvent(!button, big_blind_post.get());
 
+  fprintf(stdout, "%s:%d\n", __FILE__, __LINE__);
   _do_betting_round(hand_state);
   if (public_state.isDone()) return;
  
+  fprintf(stdout, "%s:%d\n", __FILE__, __LINE__);
   FlopDealEvent flop_event(public_state, flop);
-  hand_state.handleEvent(flop_event);
-  hand_state.broadcastEvent(flop_event);
+  hand_state.handleEvent(&flop_event);
+  hand_state.broadcastEvent(&flop_event);
   _do_betting_round(hand_state);
   if (public_state.isDone()) return;
 
+  fprintf(stdout, "%s:%d\n", __FILE__, __LINE__);
   TurnDealEvent turn_event(public_state, turn);
-  hand_state.handleEvent(turn_event);
-  hand_state.broadcastEvent(turn_event);
+  hand_state.handleEvent(&turn_event);
+  hand_state.broadcastEvent(&turn_event);
   _do_betting_round(hand_state);
   if (public_state.isDone()) return;
   
+  fprintf(stdout, "%s:%d\n", __FILE__, __LINE__);
   RiverDealEvent river_event(public_state, river);
-  hand_state.handleEvent(river_event);
-  hand_state.broadcastEvent(river_event);
+  hand_state.handleEvent(&river_event);
+  hand_state.broadcastEvent(&river_event);
   _do_betting_round(hand_state);
 }
 
@@ -98,8 +105,8 @@ void Session::_award_pot(const HandState& hand_state, seat_t seat) {
   _state.updateScore(!seat, net_loss);
 
   PotWinEvent win_event(public_state, seat);
-  hand_state.broadcastEvent(win_event);
-  _log.record(win_event);
+  hand_state.broadcastEvent(&win_event);
+  _log.record(&win_event);
 }
 
 void Session::_split_pot(const HandState& hand_state) {
@@ -108,8 +115,8 @@ void Session::_split_pot(const HandState& hand_state) {
   // no change to scores
   
   PotSplitEvent split_event(public_state);
-  hand_state.broadcastEvent(split_event);
-  _log.record(split_event);
+  hand_state.broadcastEvent(&split_event);
+  _log.record(&split_event);
 }
 
 void Session::_finish_hand(HandState& hand_state) {
@@ -134,8 +141,8 @@ void Session::_finish_hand(HandState& hand_state) {
       evals[seat] = eval;
       ShowdownEvent showdown_event(phs, hand_state.getHoleCard(seat,0), hand_state.getHoleCard(seat,1),
           eval, seat);
-      hand_state.broadcastEvent(!seat, showdown_event);
-      _log.record(showdown_event);
+      hand_state.broadcastEvent(!seat, &showdown_event);
+      _log.record(&showdown_event);
     }
     if (evals[0] > evals[1]) {
       _award_pot(hand_state, 0);
@@ -150,9 +157,14 @@ void Session::_finish_hand(HandState& hand_state) {
 void Session::playHand() {
   _init_hand();
 
+  fprintf(stdout, "%s:%d\n", __FILE__, __LINE__);
   HandState hand_state(_log, _params, _state);
+  fprintf(stdout, "%s:%d\n", __FILE__, __LINE__);
   _log.recordHandStart(_state);
+  fprintf(stdout, "%s:%d\n", __FILE__, __LINE__);
   _main_loop(hand_state);
+  fprintf(stdout, "%s:%d\n", __FILE__, __LINE__);
   _finish_hand(hand_state);
+  fprintf(stdout, "%s:%d\n", __FILE__, __LINE__);
 }
 

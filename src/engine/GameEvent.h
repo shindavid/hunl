@@ -4,6 +4,8 @@
 #include "engine/PublicHandState.h"
 #include "engine/TypeDefs.h"
 
+#include <boost/shared_ptr.hpp>
+
 namespace ps = pokerstove;
 
 /*
@@ -29,12 +31,16 @@ protected:
 
 public:
   GameEvent(const PublicHandState& public_state) : _public_state(public_state), _id(__next_id++) {}
+  virtual ~GameEvent() {}
 
   uint64_t getID() const { return _id; }
   const PublicHandState& getPublicHandState() const { return _public_state; }
 
 private:
   static uint64_t __next_id;
+
+  GameEvent(GameEvent const&) = delete;
+  GameEvent& operator=(GameEvent const&) = delete;
 };
 
 uint64_t GameEvent::__next_id = 1;
@@ -48,6 +54,7 @@ private:
 
 public:
   PlayerEvent(seat_t seat) : _seat(seat) {}
+  virtual ~PlayerEvent() {}
 
   seat_t getSeat() const { return _seat; }
 };
@@ -63,6 +70,7 @@ public:
       _cards[i] = cards[i];
     }
   }
+  virtual ~DealEvent() {}
 
   ps::Card getCard(int i) const { return _cards[i]; }
 
@@ -103,12 +111,9 @@ class BettingDecision : public GameEvent, public PlayerEvent {
 public:
   BettingDecision(const PublicHandState& public_state, seat_t seat) :
     GameEvent(public_state), PlayerEvent(seat) {}
-
-  virtual action_type_t getActionType() const {
-    fprintf(stderr, "Something is wrong.\n");
-    throw std::exception();
-  }
+  virtual ~BettingDecision() {}
 };
+typedef boost::shared_ptr<BettingDecision> BettingDecision_ptr;
 
 template <action_type_t action_type>
 class BettingDecision_Impl : public BettingDecision {
@@ -122,8 +127,6 @@ public:
   
   chip_amount_t getChipAmount() const { return _chip_amount; }
   static const action_type_t ACTION_TYPE = action_type;
-  
-  virtual action_type_t getActionType() const { return action_type; }
 };
 
 typedef BettingDecision_Impl<ACTION_BET> BetDecision;
@@ -132,18 +135,19 @@ typedef BettingDecision_Impl<ACTION_CHECK> CheckDecision;
 typedef BettingDecision_Impl<ACTION_CALL> CallDecision;
 typedef BettingDecision_Impl<ACTION_FOLD> FoldDecision;
 
+typedef boost::shared_ptr<BetDecision> BetDecision_ptr;
+typedef boost::shared_ptr<RaiseDecision> RaiseDecision_ptr;
+typedef boost::shared_ptr<CheckDecision> CheckDecision_ptr;
+typedef boost::shared_ptr<CallDecision> CallDecision_ptr;
+typedef boost::shared_ptr<FoldDecision> FoldDecision_ptr;
+
 class BettingDecisionRequest : public GameEvent, public PlayerEvent {
-private:
-  void _validate(const BetDecision& decision) const;
-  void _validate(const RaiseDecision& decision) const;
-  void _validate(const CheckDecision& decision) const;
-  void _validate(const CallDecision& decision) const;
-  void _validate(const FoldDecision& decision) const;
 public:
   BettingDecisionRequest(const PublicHandState& public_state, seat_t seat) :
     GameEvent(public_state), PlayerEvent(seat) {}
 
-  void validate(const BettingDecision& decision);
+  template<typename E>
+  void validate(const E* decision) const;
   
   bool facingBet() const;
   chip_amount_t betAmountFaced() const;  // this is the amount you would call with, only defined if facingBet() == true
@@ -183,6 +187,7 @@ public:
   chip_amount_t getAmount() const { return _amount; }
   BlindType getBlindType() const { return _btype; }
 };
+typedef boost::shared_ptr<BlindPostEvent> BlindPostEvent_ptr;
 
 class BlindPostRequest : public GameEvent, public PlayerEvent {
 private:
@@ -196,8 +201,8 @@ public:
 
   chip_amount_t getAmount() const { return _amount; }
 
-  void validate(const BlindPostEvent& event) const {
-    assert(_amount == event.getAmount());
+  void validate(const BlindPostEvent* event) const {
+    assert(_amount == event->getAmount());
   }
   
   BlindType getBlindType() const { return _btype; }

@@ -17,28 +17,19 @@ private:
   ps::CardSet _hole_cards[2];
   ps::Card _hole_cards_ordered[2][2];
 
-  void _handleEvent(seat_t seat, const FoldDecision& event);
-  void _handleEvent(seat_t seat, const CallDecision& event);
-  void _handleEvent(seat_t seat, const CheckDecision& event);
-  void _handleEvent(seat_t seat, const BetDecision& event);
-  void _handleEvent(seat_t seat, const RaiseDecision& event);
-
 public:
   HandState(SessionLog& log, const SessionParams& session_params, const SessionState& session_state);
 
   const PublicHandState& getPublicState() const { return _public_hand_state; }
   PublicHandState& getPublicState() { return _public_hand_state; }
 
-  template<typename E> void handleEvent(seat_t seat, const E& event);
-  template<typename E> void broadcastEvent(seat_t seat, const E& event) const {
+  template<typename E> void handleEvent(seat_t seat, const E* event);
+  template<typename E> void broadcastEvent(seat_t seat, const E* event) const {
     _public_hand_state.getPlayer(seat)->handleEvent(event);
   }
   
-  void handleEvent(const FlopDealEvent& event);
-  void handleEvent(const TurnDealEvent& event);
-  void handleEvent(const RiverDealEvent& event);
-  template<typename E> void handleEvent(const E& event);
-  template<typename E> void broadcastEvent(const E& event) const {
+  template<typename E> void handleEvent(const E* event);
+  template<typename E> void broadcastEvent(const E* event) const {
     for (seat_t seat=0; seat<2; ++seat) {
       _public_hand_state.getPlayer(seat)->handleEvent(event);
     }
