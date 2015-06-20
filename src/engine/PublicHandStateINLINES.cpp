@@ -34,7 +34,9 @@ chip_amount_t PublicHandState::getPotSize() const {
 
 bool PublicHandState::isCurrentBettingRoundDone() const {
   for (seat_t seat=0; seat<2; ++seat) {
-    if (!_folded[seat] && _action_count[seat] < _global_action_count) return false;
+    if (!hasFolded(seat) && !isAllIn(seat)) {
+      if (!_folded[seat] && _action_count[seat] < _global_action_count) return false;
+    }
   }
   return true;
 }
