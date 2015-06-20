@@ -36,7 +36,6 @@ void Session::_main_loop(HandState& hand_state) {
   ps::Card flop[3];
   ps::Card turn;
   ps::Card river;
-  fprintf(stdout, "%s:%d\n", __FILE__, __LINE__);
 
   for (int p=0; p<2; ++p) {
     for (int i=0; i<2; ++i ) {
@@ -49,7 +48,6 @@ void Session::_main_loop(HandState& hand_state) {
   turn = _deck.deal();
   river = _deck.deal();
 
-  fprintf(stdout, "%s:%d\n", __FILE__, __LINE__);
   const PublicHandState& public_state = hand_state.getPublicState();
   for (seat_t seat=0; seat<2; ++seat) {
     HoleCardDealEvent hole_card_event(public_state, seat, holdings[seat]);
@@ -57,7 +55,6 @@ void Session::_main_loop(HandState& hand_state) {
     hand_state.handleEvent(seat, &hole_card_event);
   }
 
-  fprintf(stdout, "%s:%d\n", __FILE__, __LINE__);
   seat_t button = _state.getButton();
   BlindPostRequest small_blind_request(public_state, button, _params.getSmallBlindSize(), SMALL_BLIND);
   BlindPostEvent_ptr small_blind_post = _params.getPlayer(button)->handleRequest(&small_blind_request);
@@ -69,25 +66,21 @@ void Session::_main_loop(HandState& hand_state) {
   big_blind_request.validate(big_blind_post.get());
   hand_state.handleEvent(!button, big_blind_post.get());
 
-  fprintf(stdout, "%s:%d\n", __FILE__, __LINE__);
   _do_betting_round(hand_state);
   if (public_state.isDone()) return;
  
-  fprintf(stdout, "%s:%d\n", __FILE__, __LINE__);
   FlopDealEvent flop_event(public_state, flop);
   hand_state.handleEvent(&flop_event);
   hand_state.broadcastEvent(&flop_event);
   _do_betting_round(hand_state);
   if (public_state.isDone()) return;
 
-  fprintf(stdout, "%s:%d\n", __FILE__, __LINE__);
   TurnDealEvent turn_event(public_state, turn);
   hand_state.handleEvent(&turn_event);
   hand_state.broadcastEvent(&turn_event);
   _do_betting_round(hand_state);
   if (public_state.isDone()) return;
   
-  fprintf(stdout, "%s:%d\n", __FILE__, __LINE__);
   RiverDealEvent river_event(public_state, river);
   hand_state.handleEvent(&river_event);
   hand_state.broadcastEvent(&river_event);
@@ -122,10 +115,9 @@ void Session::_split_pot(const HandState& hand_state) {
 void Session::_finish_hand(HandState& hand_state) {
   PublicHandState& phs = hand_state.getPublicState();
   phs.advanceBettingRound();
-  assert(!phs.hasFolded(0) && !phs.hasFolded(1));
+  assert(!(phs.hasFolded(0) && phs.hasFolded(1)));
   assert(phs.getPotSize() == 
       phs.getAmountWageredPriorRounds(0) + phs.getAmountWageredPriorRounds(1));
-  assert(!phs.hasFolded(0) && !phs.hasFolded(1));
 
   if (phs.hasFolded(0)) {
     _award_pot(hand_state, 1);
@@ -157,14 +149,9 @@ void Session::_finish_hand(HandState& hand_state) {
 void Session::playHand() {
   _init_hand();
 
-  fprintf(stdout, "%s:%d\n", __FILE__, __LINE__);
   HandState hand_state(_log, _params, _state);
-  fprintf(stdout, "%s:%d\n", __FILE__, __LINE__);
   _log.recordHandStart(_state);
-  fprintf(stdout, "%s:%d\n", __FILE__, __LINE__);
   _main_loop(hand_state);
-  fprintf(stdout, "%s:%d\n", __FILE__, __LINE__);
   _finish_hand(hand_state);
-  fprintf(stdout, "%s:%d\n", __FILE__, __LINE__);
 }
 

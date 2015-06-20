@@ -7,7 +7,9 @@ PublicHandState::PublicHandState(const SessionParams& session_params,
     _wagered_current_round[seat] = 0;
     _wagered_prior_rounds[seat] = 0;
     _folded[seat] = false;
+    _action_count[seat] = 0;
   }
+  _global_action_count = 1;
   _action_on = session_state.getButton();
   _is_current_betting_round_done = false;
 }
@@ -30,6 +32,13 @@ chip_amount_t PublicHandState::getPotSize() const {
   return pot;
 }
 
+bool PublicHandState::isCurrentBettingRoundDone() const {
+  for (seat_t seat=0; seat<2; ++seat) {
+    if (!_folded[seat] && _action_count[seat] < _global_action_count) return false;
+  }
+  return true;
+}
+
 bool PublicHandState::validate_chip_amounts() const {
   return (_wagered_prior_rounds[0] + _wagered_current_round[0] <= _get_starting_stack_size()) &&
     (_wagered_prior_rounds[1] + _wagered_current_round[1] <= _get_starting_stack_size());
@@ -49,8 +58,10 @@ void PublicHandState::advanceBettingRound() {
   for (seat_t seat=0; seat<2; ++seat) {
     _wagered_prior_rounds[seat] += _wagered_current_round[seat];
     _wagered_current_round[seat] = 0;
+    _action_count[seat] = 0;
   }
   
+  _global_action_count = 1;
   _action_on = !_session_state.getButton();
   _is_current_betting_round_done = isAllIn(0) || isAllIn(1);  // technically only need to test 1
 }

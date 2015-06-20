@@ -31,29 +31,32 @@ void SessionLog::record(const BlindPostEvent* event) {
 
 template<>
 void SessionLog::record(const FlopDealEvent* event) {
-  fprintf(stdout, "Flop: [%s %s %s]\n",
+  fprintf(stdout, "Flop: [%s %s %s] (pot:$%d)\n",
       event->getPublicHandState().getBoardCard(0).str().c_str(),
       event->getPublicHandState().getBoardCard(1).str().c_str(),
-      event->getPublicHandState().getBoardCard(2).str().c_str());
+      event->getPublicHandState().getBoardCard(2).str().c_str(),
+      event->getPublicHandState().getPotSize());
 }
 
 template<>
 void SessionLog::record(const TurnDealEvent* event) {
-  fprintf(stdout, "Turn: [%s %s %s][%s]\n",
-      event->getPublicHandState().getBoardCard(0).str().c_str(),
-      event->getPublicHandState().getBoardCard(1).str().c_str(),
-      event->getPublicHandState().getBoardCard(2).str().c_str(),
-      event->getPublicHandState().getBoardCard(3).str().c_str());
-}
-
-template<>
-void SessionLog::record(const RiverDealEvent* event) {
-  fprintf(stdout, "River: [%s %s %s][%s][%s]\n",
+  fprintf(stdout, "Turn: [%s %s %s][%s] (pot:$%d)\n",
       event->getPublicHandState().getBoardCard(0).str().c_str(),
       event->getPublicHandState().getBoardCard(1).str().c_str(),
       event->getPublicHandState().getBoardCard(2).str().c_str(),
       event->getPublicHandState().getBoardCard(3).str().c_str(),
-      event->getPublicHandState().getBoardCard(4).str().c_str());
+      event->getPublicHandState().getPotSize());
+}
+
+template<>
+void SessionLog::record(const RiverDealEvent* event) {
+  fprintf(stdout, "River: [%s %s %s][%s][%s] (pot:$%d)\n",
+      event->getPublicHandState().getBoardCard(0).str().c_str(),
+      event->getPublicHandState().getBoardCard(1).str().c_str(),
+      event->getPublicHandState().getBoardCard(2).str().c_str(),
+      event->getPublicHandState().getBoardCard(3).str().c_str(),
+      event->getPublicHandState().getBoardCard(4).str().c_str(),
+      event->getPublicHandState().getPotSize());
 }
 
 template<>
@@ -102,19 +105,19 @@ void SessionLog::record(const ShowdownEvent* event) {
 
 template<>
 void SessionLog::record(const PotWinEvent* event) {
-  fprintf(stdout, "%s wins pot of %d", 
+  fprintf(stdout, "%s wins pot of $%d", 
       event->getPublicHandState().getPlayer(event->getSeat())->getName(),
       event->getCalledPotSize());
   chip_amount_t uncalled = event->getUncalledBetSize();
   if (uncalled) {
-    fprintf(stdout, " (uncalled %d returned)", uncalled);
+    fprintf(stdout, " (uncalled $%d returned)", uncalled);
   }
   fprintf(stdout, ".\n");
 }
 
 template<>
 void SessionLog::record(const PotSplitEvent* event) {
-  fprintf(stdout, "%s and %s each win split pot of %d.", 
+  fprintf(stdout, "%s and %s each win split pot of $%d.", 
       event->getPublicHandState().getPlayer(!event->getPublicHandState().getButton())->getName(),
       event->getPublicHandState().getPlayer(event->getPublicHandState().getButton())->getName(),
       event->getSplitAmount());

@@ -24,8 +24,10 @@ BettingDecision_ptr RandomPlayer::handleRequest(const BettingDecisionRequest* re
       case random_params_t::CALL:
         return _create_call(request);
       case random_params_t::MIN_RAISE:
+        fprintf(stdout, "MIN_RAISE\n");
         if (request->canRaise()) return _create_raise(request, request->minLegalRaiseAmount());
       case random_params_t::POT_SIZED_RAISE:
+        fprintf(stdout, "POT_RAISE\n");
         if (request->canRaise()) return _create_raise(request, request->legalizeRaise(request->getPotentialPotSize()*2));
       case random_params_t::ALL_IN_RAISE:
         if (request->canRaise()) _create_raise(request, request->maxLegalRaiseAmount());

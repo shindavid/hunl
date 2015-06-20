@@ -79,10 +79,11 @@ void HandState::handleEvent(seat_t seat, const CheckDecision* event)
 {
   seat_t action_on = _public_hand_state.getActionOn();
   assert(action_on==seat);
-  assert(_public_hand_state.getAmountWageredCurrentRound(seat) == 0);
-  assert(_public_hand_state.getAmountWageredCurrentRound(!seat) == 0);
+  assert(_public_hand_state.getAmountWageredCurrentRound(seat) ==
+      _public_hand_state.getAmountWageredCurrentRound(!seat));
+  
+  _public_hand_state.setActionCount(seat);
   _public_hand_state.setActionOn(!action_on);
-  _public_hand_state.setCurrentBettingRoundDone(action_on == _public_hand_state.getButton());
   assert(_public_hand_state.validate_chip_amounts());
   _log.record(event);
 }
@@ -97,9 +98,9 @@ void HandState::handleEvent(seat_t seat, const CallDecision* event)
   assert(_public_hand_state.getAmountWageredCurrentRound(!seat) ==
       _public_hand_state.getAmountWageredCurrentRound(seat) + amount);
 
+  _public_hand_state.setActionCount(seat);
   _public_hand_state.addWagerCurrentRound(seat, amount);
   _public_hand_state.setActionOn(!action_on);
-  _public_hand_state.setCurrentBettingRoundDone(true);
   assert(_public_hand_state.validate_chip_amounts());
   _log.record(event);
 }
@@ -110,10 +111,12 @@ void HandState::handleEvent(seat_t seat, const BetDecision* event)
   seat_t action_on = _public_hand_state.getActionOn();
   
   assert(action_on==seat);
-  assert(_public_hand_state.getAmountWageredCurrentRound(seat) == 0);
-  assert(_public_hand_state.getAmountWageredCurrentRound(!seat) == 0);
+  assert(_public_hand_state.getAmountWageredCurrentRound(!seat) ==
+      _public_hand_state.getAmountWageredCurrentRound(seat));
 
   chip_amount_t amount = event->getChipAmount();
+  _public_hand_state.incrementGlobalActionCount();
+  _public_hand_state.setActionCount(seat);
   _public_hand_state.addWagerCurrentRound(seat, amount);
   _public_hand_state.setActionOn(!action_on);
   assert(_public_hand_state.validate_chip_amounts());
@@ -127,15 +130,19 @@ void HandState::handleEvent(seat_t seat, const RaiseDecision* event)
   chip_amount_t amount = event->getChipAmount();
   chip_amount_t opp_wager_amount_current_round =
     _public_hand_state.getAmountWageredCurrentRound(!seat);
-  chip_amount_t delta = amount - opp_wager_amount_current_round;
-  chip_amount_t last_delta = opp_wager_amount_current_round -
+  chip_amount_t my_wager_amount_current_round =
     _public_hand_state.getAmountWageredCurrentRound(seat);
   
+  chip_amount_t delta = amount - my_wager_amount_current_round;
+  chip_amount_t last_delta = opp_wager_amount_current_round - my_wager_amount_current_round;
+
   assert(action_on==seat);
   assert(opp_wager_amount_current_round > 0);
   assert(last_delta > 0);
   assert(delta >= last_delta);
 
+  _public_hand_state.incrementGlobalActionCount();
+  _public_hand_state.setActionCount(seat);
   _public_hand_state.addWagerCurrentRound(seat, delta);
   _public_hand_state.setActionOn(!action_on);
   assert(_public_hand_state.validate_chip_amounts());

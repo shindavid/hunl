@@ -12,13 +12,15 @@ namespace ps = pokerstove;
  * Hand state, only the public part of it.
  */
 class PublicHandState {
-protected:
+private:
   const SessionParams& _session_params;
   const SessionState& _session_state;
   
   chip_amount_t _wagered_prior_rounds[2];
   chip_amount_t _wagered_current_round[2];
   seat_t _action_on;
+  int _global_action_count;  // every bet/raise increments this counter
+  int _action_count[2];  // when player i acts, _action_count[i] is set to _global_action_count
   bool _folded[2];
   bool _is_current_betting_round_done;
 
@@ -34,8 +36,7 @@ public:
   seat_t getButton() const { return _session_state.getButton(); }
   
   bool isDone() const { return _folded[0] || _folded[1]; }
-  bool isCurrentBettingRoundDone() const { return _is_current_betting_round_done; }
-  void setCurrentBettingRoundDone(bool x) { _is_current_betting_round_done = x; }
+  bool isCurrentBettingRoundDone() const;
   
   seat_t getActionOn() const { return _action_on; }
   void setActionOn(seat_t seat) { _action_on = seat; }
@@ -52,6 +53,8 @@ public:
   void addWagerCurrentRound(seat_t seat, chip_amount_t amount) {
     _wagered_current_round[seat] += amount;
   }
+  void incrementGlobalActionCount() { _global_action_count++; }
+  void setActionCount(seat_t seat) { _action_count[seat] = _global_action_count; }
 
   chip_amount_t getRemainingChips(seat_t seat) const {
     return _get_starting_stack_size() - _wagered_current_round[seat] - _wagered_prior_rounds[seat];
