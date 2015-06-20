@@ -111,10 +111,17 @@ void SessionLog::record(const ShowdownEvent* event) {
 
 template<>
 void SessionLog::record(const PotWinEvent* event) {
-  fprintf(stdout, "%s wins pot of $%d", 
-      event->getPublicHandState().getPlayer(event->getSeat())->getName(),
-      event->getCalledPotSize());
   chip_amount_t uncalled = event->getUncalledBetSize();
+  chip_amount_t pot_size = event->getCalledPotSize();
+
+  if (pot_size == 2 * event->getPublicHandState().getSessionParams().getSmallBlindSize()) {
+    // (dshin) printing hack
+    pot_size += uncalled;
+    uncalled = 0;
+  }
+
+  fprintf(stdout, "%s wins pot of $%d", 
+      event->getPublicHandState().getPlayer(event->getSeat())->getName(), pot_size);
   if (uncalled) {
     fprintf(stdout, " (uncalled $%d returned)", uncalled);
   }
