@@ -8,7 +8,7 @@ class SessionParams {
 private:
   const session_id_t _id;  // eventually get assigned from a database
 
-  Player* _players[2];
+  Player* _players[NUM_PLAYERS];
   const chip_amount_t _starting_stack_size;  // every hand, stacks reset to this size
   const chip_amount_t _small_blind_size;
   const chip_amount_t _big_blind_size;

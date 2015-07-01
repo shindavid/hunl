@@ -22,3 +22,5 @@ enum BlindType {
   BIG_BLIND
 };
 
+#define NUM_PLAYERS 2
+

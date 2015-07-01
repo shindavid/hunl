@@ -9,15 +9,67 @@ Session::Session(Player* p0, Player* p1, chip_amount_t starting_stack_size,
   _log.recordSessionStart(_params, base_seed);
 }
 
+template<>
+void Session::handleEvent(HandState& state, seat_t seat, const HoleCardDealEvent* event)
+{
+  ps::CardSet set;
+  set.insert(event->getCard(0));
+  set.insert(event->getCard(1));
+  state.setHolding(event->getSeat(), set);
+  _log.record(&state, event);
+}
+
+template<>
+void Session::handleEvent(HandState& state, const PublicDealEvent* event)
+{
+  Board& board = state.getBoard();
+  for (int i=0; i<event->getNumCards(); ++i) {
+    board.add(event->getCard(i));
+  }
+  _log.record(&state, event);
+}
+
+template<>
+void Session::handleEvent(HandState& state, seat_t seat, const BlindPostDecision* event)
+{
+  assert(state.getActionOn()==seat);
+  chip_amount_t amount = event->getAmount();
+  state.addWagerCurrentRound(seat, amount);
+  state.setActionOn(!seat);
+  assert(state._validate_chip_amounts());
+  
+  _log.record(&state, event);
+}
+
+template<>
+void Session::handleEvent(HandState& state, seat_t seat, const BettingDecision* event)
+{
+  chip_amount_t amount = event->getAmount();
+  action_type_t action_type = event->getActionType();
+  bool all_in = state.isAllIn(seat);
+  bool fold = action_type==ACTION_FOLD;
+
+  state.setFolded(seat);
+  state.setCurrentBettingRoundDone(fold || all_in);
+  state.incrementGlobalActionCount(action_type==ACTION_BET || action_type==ACTION_RAISE);
+  state.setActionCount(seat);
+  state.addWagerCurrentRound(seat, amount);
+  state.setActionOn(!seat);
+  assert(state._validate_chip_amounts());
+
+  _log.record(&state, event);
+}
+
 void Session::_do_betting_round(HandState& hand_state) {
-  const PublicHandState& public_state = hand_state.getPublicState();
-  while (!public_state.isCurrentBettingRoundDone()) {
-    seat_t seat = public_state.getActionOn();
-    BettingDecisionRequest request(public_state, seat);
-    BettingDecision_ptr decision = _params.getPlayer(seat)->handleRequest(&request);
-    request.validate(decision.get());
-    hand_state.handleEvent(seat, decision.get());
-    hand_state.broadcastEvent(!seat, decision.get());
+  while (!hand_state.isCurrentBettingRoundDone()) {
+    seat_t seat = hand_state.getActionOn();
+    BettingDecisionRequest request(&hand_state);
+    BettingDecision decision = _params.getPlayer(seat)->handleRequest(&request);
+    request.validate(decision);
+
+    handleEvent(hand_state, seat, &decision);
+    broadcastEvent(hand_state, !seat, &decision);
+    _log.record(&hand_state, &decision);
   }
 }
 
@@ -48,93 +100,87 @@ void Session::_main_loop(HandState& hand_state) {
   turn = _deck.deal();
   river = _deck.deal();
 
-  const PublicHandState& public_state = hand_state.getPublicState();
   for (seat_t seat=0; seat<2; ++seat) {
-    HoleCardDealEvent hole_card_event(public_state, seat, holdings[seat]);
-    _params.getPlayer(seat)->handleEvent(&hole_card_event);
-    hand_state.handleEvent(seat, &hole_card_event);
+    HoleCardDealEvent hole_card_event(holdings[seat], seat);
+    _params.getPlayer(seat)->handleEvent(hand_state, &hole_card_event);
+    handleEvent(hand_state, seat, &hole_card_event);
   }
 
-  seat_t button = _state.getButton();
-  BlindPostRequest small_blind_request(public_state, button, _params.getSmallBlindSize(), SMALL_BLIND);
-  BlindPostEvent_ptr small_blind_post = _params.getPlayer(button)->handleRequest(&small_blind_request);
-  small_blind_request.validate(small_blind_post.get());
-  hand_state.handleEvent(button, small_blind_post.get());
+  seat_t button = hand_state.getButton();
+  BlindPostRequest small_blind_request(&hand_state);
+  BlindPostDecision small_blind_post = _params.getPlayer(button)->handleRequest(&small_blind_request);
+  small_blind_request.validate(small_blind_post);
+  handleEvent(hand_state, button, &small_blind_post);
 
-  BlindPostRequest big_blind_request(public_state, !button, _params.getBigBlindSize(), BIG_BLIND);
-  BlindPostEvent_ptr big_blind_post = _params.getPlayer(!button)->handleRequest(&big_blind_request);
-  big_blind_request.validate(big_blind_post.get());
-  hand_state.handleEvent(!button, big_blind_post.get());
+  BlindPostRequest big_blind_request(&hand_state);
+  BlindPostDecision big_blind_post = _params.getPlayer(!button)->handleRequest(&big_blind_request);
+  big_blind_request.validate(big_blind_post);
+  handleEvent(hand_state, !button, &big_blind_post);
 
   _do_betting_round(hand_state);
-  if (public_state.isDone()) return;
+  if (hand_state.isDone()) return;
  
-  FlopDealEvent flop_event(public_state, flop);
-  hand_state.handleEvent(&flop_event);
-  hand_state.broadcastEvent(&flop_event);
+  PublicDealEvent flop_event(flop, 3);
+  handleEvent(hand_state, &flop_event);
+  broadcastEvent(hand_state, &flop_event);
   _do_betting_round(hand_state);
-  if (public_state.isDone()) return;
+  if (hand_state.isDone()) return;
 
-  TurnDealEvent turn_event(public_state, turn);
-  hand_state.handleEvent(&turn_event);
-  hand_state.broadcastEvent(&turn_event);
+  PublicDealEvent turn_event(&turn, 1);
+  handleEvent(hand_state, &turn_event);
+  broadcastEvent(hand_state, &turn_event);
   _do_betting_round(hand_state);
-  if (public_state.isDone()) return;
+  if (hand_state.isDone()) return;
   
-  RiverDealEvent river_event(public_state, river);
-  hand_state.handleEvent(&river_event);
-  hand_state.broadcastEvent(&river_event);
+  PublicDealEvent river_event(&river, 1);
+  handleEvent(hand_state, &river_event);
+  broadcastEvent(hand_state, &river_event);
   _do_betting_round(hand_state);
 }
 
 void Session::_award_pot(const HandState& hand_state, seat_t seat) {
-  const PublicHandState& public_state = hand_state.getPublicState();
-  
-  chip_amount_t net_gain = public_state.getPotSize() - public_state.getAmountWageredPriorRounds(seat);
-  chip_amount_t net_loss = - public_state.getAmountWageredPriorRounds(!seat);
+  chip_amount_t net_gain = hand_state.getPotSize() - hand_state.getAmountWageredPriorRounds(seat);
+  chip_amount_t net_loss = - hand_state.getAmountWageredPriorRounds(!seat);
 
   assert(net_gain + net_loss == 0);
   _state.updateScore(seat, net_gain);
   _state.updateScore(!seat, net_loss);
 
-  PotWinEvent win_event(public_state, seat);
-  hand_state.broadcastEvent(&win_event);
-  _log.record(&win_event);
+  PotWinEvent win_event(&hand_state, seat);
+  broadcastEvent(hand_state, &win_event);
+  _log.record(&hand_state, &win_event);
 }
 
 void Session::_split_pot(const HandState& hand_state) {
-  const PublicHandState& public_state = hand_state.getPublicState();
-  
   // no change to scores
   
-  PotSplitEvent split_event(public_state);
-  hand_state.broadcastEvent(&split_event);
-  _log.record(&split_event);
+  PotSplitEvent split_event(&hand_state);
+  broadcastEvent(hand_state, &split_event);
+  _log.record(&hand_state, &split_event);
 }
 
 void Session::_finish_hand(HandState& hand_state) {
-  PublicHandState& phs = hand_state.getPublicState();
-  phs.advanceBettingRound();
-  assert(!(phs.hasFolded(0) && phs.hasFolded(1)));
-  assert(phs.getPotSize() == 
-      phs.getAmountWageredPriorRounds(0) + phs.getAmountWageredPriorRounds(1));
+  hand_state.advanceBettingRound();
+  assert(!(hand_state.hasFolded(0) && hand_state.hasFolded(1)));
+  assert(hand_state.getPotSize() == 
+      hand_state.getAmountWageredPriorRounds(0) + hand_state.getAmountWageredPriorRounds(1));
 
-  if (phs.hasFolded(0)) {
+  if (hand_state.hasFolded(0)) {
     _award_pot(hand_state, 1);
-  } else if (phs.hasFolded(1)) {
+  } else if (hand_state.hasFolded(1)) {
     _award_pot(hand_state, 0);
   } else {
     ps::PokerEvaluation evals[2];
-    seat_t showdown_order[2] = {!phs.getButton(), phs.getButton()};
+    seat_t showdown_order[2] = {!hand_state.getButton(), hand_state.getButton()};
     for (int i=0; i<2; ++i) {
       seat_t seat = showdown_order[i];
-      ps::CardSet holding = hand_state.getHoleCards(seat);
-      ps::PokerEvaluation eval = _evaluator.evaluateHand(holding, phs.getBoard()).high();
+      Holding holding = hand_state.getHolding(seat);
+      ps::PokerEvaluation eval = _evaluator.evaluateHand(holding.getCardSet(), 
+          hand_state.getBoard().getCards()).high();
       evals[seat] = eval;
-      ShowdownEvent showdown_event(phs, hand_state.getHoleCard(seat,0), hand_state.getHoleCard(seat,1),
-          eval, seat);
-      hand_state.broadcastEvent(!seat, &showdown_event);
-      _log.record(&showdown_event);
+      ShowdownEvent showdown_event(holding.getCard1(), holding.getCard2(), eval, seat);
+      broadcastEvent(hand_state, !seat, &showdown_event);
+      _log.record(&hand_state, &showdown_event);
     }
     if (evals[0] > evals[1]) {
       _award_pot(hand_state, 0);
@@ -149,8 +195,8 @@ void Session::_finish_hand(HandState& hand_state) {
 void Session::playHand() {
   _init_hand();
 
-  HandState hand_state(_log, _params, _state);
-  _log.recordHandStart(hand_state.getPublicState());
+  HandState hand_state(_params, _state);
+  _log.recordHandStart(&hand_state);
   _main_loop(hand_state);
   _finish_hand(hand_state);
 }

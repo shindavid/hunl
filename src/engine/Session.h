@@ -39,6 +39,23 @@ private:
   void _award_pot(const HandState& public_state, seat_t seat);
   void _split_pot(const HandState& public_state);
 
+  template<typename E> void handleEvent(HandState& state, seat_t seat, const E* event);
+  template<typename E> void broadcastEvent(HandState& state, seat_t seat, const E* event) const {
+    state.getPlayer(seat)->handleEvent(state, event);
+  }
+  
+  template<typename E> void handleEvent(HandState& state, const E* event);
+  template<typename E> void broadcastEvent(HandState& state, const E* event) const {
+    for (seat_t seat=0; seat<NUM_PLAYERS; ++seat) {
+      state.getPlayer(seat)->handleEvent(state, event);
+    }
+  }
+  template<typename E> void broadcastEvent(const HandState& state, const E* event) const {
+    for (seat_t seat=0; seat<NUM_PLAYERS; ++seat) {
+      state.getPlayer(seat)->handleEvent(state, event);
+    }
+  }
+
 public:
   Session(Player* p0, Player* p1, chip_amount_t stack_size, chip_amount_t small_blind_size,
       chip_amount_t big_blind_size, uint64_t base_seed);

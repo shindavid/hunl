@@ -37,7 +37,7 @@ public:
     _check_dice(random_params._check_probs),
     _call_dice(random_params._call_probs) {}
 
-  virtual BettingDecision_ptr handleRequest(const BettingDecisionRequest* request);
+  virtual BettingDecision handleRequest(const BettingDecisionRequest* request);
 };
 
 #include "RandomPlayerINLINES.cpp"
