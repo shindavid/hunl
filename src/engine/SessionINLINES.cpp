@@ -22,6 +22,7 @@ void Session::handleEvent(HandState& state, seat_t seat, const HoleCardDealEvent
 template<>
 void Session::handleEvent(HandState& state, const PublicDealEvent* event)
 {
+  state.setActionOn(!_state.getButton());
   Board& board = state.getBoard();
   for (int i=0; i<event->getNumCards(); ++i) {
     board.add(event->getCard(i));
@@ -35,7 +36,6 @@ void Session::handleEvent(HandState& state, seat_t seat, const BlindPostDecision
   assert(state.getActionOn()==seat);
   chip_amount_t amount = event->getAmount();
   state.addWagerCurrentRound(seat, amount);
-  state.setActionOn(!seat);
   assert(state._validate_chip_amounts());
   
   _log.record(&state, event);
@@ -49,7 +49,7 @@ void Session::handleEvent(HandState& state, seat_t seat, const BettingDecision* 
   bool all_in = state.isAllIn(seat);
   bool fold = action_type==ACTION_FOLD;
 
-  state.setFolded(seat);
+  state.setFolded(seat, fold);
   state.setCurrentBettingRoundDone(fold || all_in);
   state.incrementGlobalActionCount(action_type==ACTION_BET || action_type==ACTION_RAISE);
   state.setActionCount(seat);
@@ -69,8 +69,8 @@ void Session::_do_betting_round(HandState& hand_state) {
 
     handleEvent(hand_state, seat, &decision);
     broadcastEvent(hand_state, !seat, &decision);
-    _log.record(&hand_state, &decision);
   }
+  hand_state.advanceBettingRound();
 }
 
 void Session::_init_hand() {
@@ -107,16 +107,20 @@ void Session::_main_loop(HandState& hand_state) {
   }
 
   seat_t button = hand_state.getButton();
+  
+  hand_state.setActionOn(button);
   BlindPostRequest small_blind_request(&hand_state);
   BlindPostDecision small_blind_post = _params.getPlayer(button)->handleRequest(&small_blind_request);
   small_blind_request.validate(small_blind_post);
   handleEvent(hand_state, button, &small_blind_post);
 
+  hand_state.setActionOn(!button);
   BlindPostRequest big_blind_request(&hand_state);
   BlindPostDecision big_blind_post = _params.getPlayer(!button)->handleRequest(&big_blind_request);
   big_blind_request.validate(big_blind_post);
   handleEvent(hand_state, !button, &big_blind_post);
 
+  hand_state.setActionOn(button);
   _do_betting_round(hand_state);
   if (hand_state.isDone()) return;
  
@@ -160,7 +164,6 @@ void Session::_split_pot(const HandState& hand_state) {
 }
 
 void Session::_finish_hand(HandState& hand_state) {
-  hand_state.advanceBettingRound();
   assert(!(hand_state.hasFolded(0) && hand_state.hasFolded(1)));
   assert(hand_state.getPotSize() == 
       hand_state.getAmountWageredPriorRounds(0) + hand_state.getAmountWageredPriorRounds(1));
@@ -170,6 +173,7 @@ void Session::_finish_hand(HandState& hand_state) {
   } else if (hand_state.hasFolded(1)) {
     _award_pot(hand_state, 0);
   } else {
+    hand_state.setShowdownPerformed();
     ps::PokerEvaluation evals[2];
     seat_t showdown_order[2] = {!hand_state.getButton(), hand_state.getButton()};
     for (int i=0; i<2; ++i) {

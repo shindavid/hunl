@@ -3,7 +3,7 @@
 #include "Player.h"
 
 void SessionLog::recordSessionStart(const SessionParams& params, uint64_t base_seed) {
-  fprintf(stdout, "Starting session %lu of %d-%d HUNL with %d stack sizes, %s vs %s (seed=%lu)\n",
+  fprintf(stdout, "Starting session %lu of $%d-$%d HUNL with $%d stack sizes, %s vs %s (seed=%lu)\n",
       params.getID(), params.getSmallBlindSize(), params.getBigBlindSize(),
       params.getStartingStackSize(), params.getPlayer(0)->getName(), params.getPlayer(1)->getName(),
       base_seed);

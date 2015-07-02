@@ -23,6 +23,10 @@ inline void BettingDecisionRequest::validate(BettingDecision decision) const {
 inline chip_amount_t BettingDecisionRequest::legalCallAmount() const {
   seat_t seat = _hand_state->getActionOn();
   
+  //fprintf(stdout, "%s() seat=%d max=%d wagered=%d\n", __func__, seat, 
+  //  _hand_state->getMaxAmountWageredCurrentRound(),
+  //  _hand_state->getAmountWageredCurrentRound(seat));
+
   chip_amount_t amount = _hand_state->getMaxAmountWageredCurrentRound() -
     _hand_state->getAmountWageredCurrentRound(seat);
   assert(amount>=0);

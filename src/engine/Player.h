@@ -7,9 +7,12 @@
 #include <string>
 
 class Player {
-private:
+protected:
   player_id_t _id;  // eventually retrieve from a database
   std::string _name;
+
+  BettingDecision _createBettingDecision(
+      const BettingDecisionRequest* request, chip_amount_t amount) const;
 
 public:
   Player(const char* name) {

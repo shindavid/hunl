@@ -22,11 +22,11 @@ private:
   chip_amount_t _wagered_prior_rounds[NUM_PLAYERS];
   chip_amount_t _wagered_current_round[NUM_PLAYERS];
   seat_t _action_on;
-  int _global_action_count;  // every bet/raise increments this counter
+  int _global_action_count = 1;  // every bet/raise increments this counter
   int _action_count[NUM_PLAYERS];  // _action_count[i] set to _global_action_count when player i act
   bool _folded[NUM_PLAYERS];
-  bool _is_current_betting_round_done;
-  bool _showdown_performed;
+  bool _is_current_betting_round_done = false;
+  bool _showdown_performed = false;
 
 public:
   HandState(const SessionParams& session_params,
@@ -49,10 +49,12 @@ public:
   bool isCurrentBettingRoundDone() const;
   
   seat_t getActionOn() const { return _action_on; }
-  void setActionOn(seat_t seat) { _action_on = seat; }
+  void setActionOn(seat_t seat) {
+    _action_on = seat;
+  }
   
   bool hasFolded(seat_t seat) const { return _folded[seat]; }
-  void setFolded(seat_t seat) { _folded[seat] = true; }
+  void setFolded(seat_t seat, bool x) { _folded[seat] = x; }
 
   chip_amount_t getAmountWageredPriorRounds(seat_t seat) const {
     return _wagered_prior_rounds[seat];
@@ -69,6 +71,7 @@ public:
   }
   void addWagerCurrentRound(seat_t seat, chip_amount_t amount) {
     _wagered_current_round[seat] += amount;
+    //fprintf(stdout, "%s(%d,%d) -> %d\n", __func__, seat, amount, _wagered_current_round[seat]);
   }
   void incrementGlobalActionCount(bool x=true) { _global_action_count += x?1:0; }
   void setActionCount(seat_t seat) { _action_count[seat] = _global_action_count; }
@@ -87,10 +90,12 @@ public:
   void add(ps::Card card);
   void advanceBettingRound();
 
-  bool isAllIn(seat_t seat) const { return getRemainingChips(seat)==0; }
+  bool isAllIn(seat_t seat) const { 
+    return getRemainingChips(seat)==0; }
   
   const Board& getBoard() const { return _board; }
   Board& getBoard() { return _board; }
+  bool isPreflop() const { return _board.getSize() == 0; }
 
   bool _validate_chip_amounts() const;  // for debugging
 };

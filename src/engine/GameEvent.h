@@ -89,6 +89,8 @@ public:
   chip_amount_t legalCallAmount() const;
 
   chip_amount_t legalizeAdditionalAmount(chip_amount_t amount) const;
+
+  const HandState* getHandState() const { return _hand_state; }
 };
 
 class BlindPostDecision {

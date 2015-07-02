@@ -4,7 +4,14 @@ HandState::HandState(const SessionParams& session_params,
     const SessionState& session_state)
   : _session_params(&session_params)
   , _session_state(&session_state)
-{}
+{
+  for (int i=0; i<NUM_PLAYERS; ++i) {
+    _wagered_prior_rounds[i] = 0;
+    _wagered_current_round[i] = 0;
+    _action_count[i] = 0;
+    _folded[i] = false;
+  }
+}
 
 chip_amount_t HandState::getPotSize() const {
   chip_amount_t total = 0;
@@ -37,7 +44,7 @@ bool HandState::isCurrentBettingRoundDone() const {
 
   for (seat_t seat=0; seat<2; ++seat) {
     if (!isAllIn(seat)) {
-      if (!_folded[seat] && _action_count[seat] < _global_action_count) return false;
+      if (_action_count[seat] < _global_action_count) return false;
     }
   }
   return true;
@@ -51,8 +58,9 @@ void HandState::advanceBettingRound() {
     _action_count[seat] = 0;
   }
       
-  _global_action_count = 1;
-  _action_on = !_session_state->getButton();
+  seat_t button = _session_state->getButton();
+  _global_action_count += 1;
+  _action_on = _board.getSize()==0 ? button : !button;
   _is_current_betting_round_done = isAllIn(0) || isAllIn(1);  // technically only need to test 1
 }
 
