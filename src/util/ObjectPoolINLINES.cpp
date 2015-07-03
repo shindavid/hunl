@@ -20,15 +20,15 @@ ObjectPool<T,Capacity,GracefulOverflow>::ObjectPool() {
 
 template<typename T, int Capacity, bool GracefulOverflow>
 T* ObjectPool<T,Capacity,GracefulOverflow>::fetch() {
-  uint64_t& page = _bits[_cur_page_index];
-  if (unlikely(_cur_page_index==sNumPages && obj_pool::full(page))) {
+  if (unlikely(_cur_page_index==sNumPages)) {
     if (GracefulOverflow) {
       return (T*) malloc(sizeof(T));
     } else {
       throw std::exception();
     }
   }
-
+  
+  uint64_t& page = _bits[_cur_page_index];
   int bit_index = __builtin_ctzll(page);
   T* addr = (T*) &_pool[sTSize * (_cur_page_index*64+bit_index)];
 
