@@ -1,0 +1,115 @@
+In file included from main.cpp:1:0:
+ObjectPool.h:5:22: error: ‘uint32_t’ has not been declared
+ template<typename T, uint32_t capacity, bool graceful_overflow=false>
+                      ^
+ObjectPool.h:9:16: error: ‘uint32_t’ does not name a type
+   static const uint32_t sNumPages = capacity / 64;
+                ^
+ObjectPool.h:25:3: error: ‘uint64_t’ does not name a type
+   uint64_t _cur_page_index;
+   ^
+ObjectPool.h:26:3: error: ‘uint64_t’ does not name a type
+   uint64_t _pages[sNumPages];
+   ^
+ObjectPool.h:27:3: error: ‘uint64_t’ does not name a type
+   uint64_t _bits[sNumPages];
+   ^
+ObjectPool.h:29:14: error: ‘uint64_t’ has not been declared
+   bool _full(uint64_t page) const { return page == ~0LL; }
+              ^
+In file included from ObjectPool.h:38:0,
+                 from main.cpp:1:
+../util/ObjectPoolINLINES.cpp:4:1: error: invalid use of template-name ‘ObjectPool’ without an argument list
+ ObjectPool::ObjectPool() {
+ ^
+../util/ObjectPoolINLINES.cpp:13:4: error: ‘template<class T, int capacity, bool graceful_overflow> class ObjectPool’ used without template parameters
+ T* ObjectPool::fetch() {
+    ^
+../util/ObjectPoolINLINES.cpp: In function ‘T* fetch()’:
+../util/ObjectPoolINLINES.cpp:14:3: error: ‘uint64_t’ was not declared in this scope
+   uint64_t& page = _bits[_cur_page_index];
+   ^
+../util/ObjectPoolINLINES.cpp:14:13: error: ‘page’ was not declared in this scope
+   uint64_t& page = _bits[_cur_page_index];
+             ^
+../util/ObjectPoolINLINES.cpp:14:20: error: ‘_bits’ was not declared in this scope
+   uint64_t& page = _bits[_cur_page_index];
+                    ^
+../util/ObjectPoolINLINES.cpp:14:26: error: ‘_cur_page_index’ was not declared in this scope
+   uint64_t& page = _bits[_cur_page_index];
+                          ^
+In file included from ../util/ObjectPoolINLINES.cpp:1:0,
+                 from ObjectPool.h:38,
+                 from main.cpp:1:
+../util/ObjectPoolINLINES.cpp:15:33: error: ‘sNumPages’ was not declared in this scope
+   if (unlikely(_cur_page_index==sNumPages && _full(page))) {
+                                 ^
+../util/Likely.h:4:39: note: in definition of macro ‘unlikely’
+ #define unlikely(x) __builtin_expect((x), 0)
+                                       ^
+../util/ObjectPoolINLINES.cpp:15:56: error: there are no arguments to ‘_full’ that depend on a template parameter, so a declaration of ‘_full’ must be available [-fpermissive]
+   if (unlikely(_cur_page_index==sNumPages && _full(page))) {
+                                                        ^
+../util/Likely.h:4:39: note: in definition of macro ‘unlikely’
+ #define unlikely(x) __builtin_expect((x), 0)
+                                       ^
+../util/ObjectPoolINLINES.cpp:15:56: note: (if you use ‘-fpermissive’, G++ will accept your code, but allowing the use of an undeclared name is deprecated)
+   if (unlikely(_cur_page_index==sNumPages && _full(page))) {
+                                                        ^
+../util/Likely.h:4:39: note: in definition of macro ‘unlikely’
+ #define unlikely(x) __builtin_expect((x), 0)
+                                       ^
+In file included from ObjectPool.h:38:0,
+                 from main.cpp:1:
+../util/ObjectPoolINLINES.cpp:17:35: error: there are no arguments to ‘malloc’ that depend on a template parameter, so a declaration of ‘malloc’ must be available [-fpermissive]
+       return (T*) malloc(sizeof(T));
+                                   ^
+../util/ObjectPoolINLINES.cpp:19:13: error: ‘exception’ is not a member of ‘std’
+       throw std::exception();
+             ^
+../util/ObjectPoolINLINES.cpp:24:19: error: ‘_pool’ was not declared in this scope
+   T* addr = (T*) &_pool[sTSize * (_cur_page_index*64+bit_index)];
+                   ^
+../util/ObjectPoolINLINES.cpp:24:25: error: ‘sTSize’ was not declared in this scope
+   T* addr = (T*) &_pool[sTSize * (_cur_page_index*64+bit_index)];
+                         ^
+../util/ObjectPoolINLINES.cpp:27:32: error: there are no arguments to ‘_full’ that depend on a template parameter, so a declaration of ‘_full’ must be available [-fpermissive]
+   _cur_page_index += _full(page) ? 1 : 0;
+                                ^
+../util/ObjectPoolINLINES.cpp: At global scope:
+../util/ObjectPoolINLINES.cpp:33:6: error: ‘template<class T, int capacity, bool graceful_overflow> class ObjectPool’ used without template parameters
+ void ObjectPool::release(T* t) {
+      ^
+../util/ObjectPoolINLINES.cpp: In function ‘void release(T*)’:
+../util/ObjectPoolINLINES.cpp:34:3: error: ‘int64_t’ was not declared in this scope
+   int64_t offset = ((int64_t)t - (int64_t)_pool) / sTSize;
+   ^
+../util/ObjectPoolINLINES.cpp:34:11: error: expected ‘;’ before ‘offset’
+   int64_t offset = ((int64_t)t - (int64_t)_pool) / sTSize;
+           ^
+../util/ObjectPoolINLINES.cpp:35:11: error: expected ‘;’ before ‘page_index’
+   int64_t page_index = offset / 64;
+           ^
+../util/ObjectPoolINLINES.cpp:36:19: error: ‘offset’ was not declared in this scope
+   int bit_index = offset % 64;
+                   ^
+In file included from ../util/ObjectPoolINLINES.cpp:1:0,
+                 from ObjectPool.h:38,
+                 from main.cpp:1:
+../util/ObjectPoolINLINES.cpp:38:16: error: ‘page_index’ was not declared in this scope
+   if (unlikely(page_index<0 || page_index>=(int64_t)sNumPages)) {
+                ^
+../util/Likely.h:4:39: note: in definition of macro ‘unlikely’
+ #define unlikely(x) __builtin_expect((x), 0)
+                                       ^
+../util/ObjectPoolINLINES.cpp:38:53: error: expected ‘)’ before ‘sNumPages’
+   if (unlikely(page_index<0 || page_index>=(int64_t)sNumPages)) {
+                                                     ^
+../util/Likely.h:4:39: note: in definition of macro ‘unlikely’
+ #define unlikely(x) __builtin_expect((x), 0)
+                                       ^
+main.cpp:21:1: error: expected ‘)’ at end of input
+ }
+ ^
+main.cpp:21:1: error: expected statement at end of input
+main.cpp:21:1: error: expected ‘}’ at end of input
