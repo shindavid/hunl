@@ -22,5 +22,12 @@ enum BlindType {
   BIG_BLIND
 };
 
+enum BettingRound {
+  PREFLOP,
+  FLOP,
+  TURN,
+  RIVER
+};
+
 #define NUM_PLAYERS 2
 
