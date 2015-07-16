@@ -3,7 +3,7 @@
 #include "engine/Player.h"
 #include "SimpleWeightedDice.h"
 
-struct random_params_t {
+struct random_nl_params_t {
   enum CanCheckResponse {
     CHECK,
     MIN_BET,
@@ -28,11 +28,11 @@ struct random_params_t {
 
 class RandomNLPlayer : public Player {
 private:
-  SimpleWeightedDice<random_params_t::NUM_CAN_CHECK_RESPONSES> _check_dice;
-  SimpleWeightedDice<random_params_t::NUM_CAN_CALL_RESPONSES> _call_dice;
+  SimpleWeightedDice<random_nl_params_t::NUM_CAN_CHECK_RESPONSES> _check_dice;
+  SimpleWeightedDice<random_nl_params_t::NUM_CAN_CALL_RESPONSES> _call_dice;
 
 public:
-  RandomNLPlayer(const BettingRules* betting_rules, const random_params_t& random_params,
+  RandomNLPlayer(const BettingRules* betting_rules, const random_nl_params_t& random_params,
       const char* name);
 
   virtual BettingDecision makeDecision(const HandState& hand_state);

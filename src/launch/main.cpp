@@ -7,17 +7,17 @@
 #include "strategy/RandomNLPlayer.h"
 
 int main() {
-  random_params_t params;
-  params._check_probs[random_params_t::CHECK] = 0.5;
-  params._check_probs[random_params_t::MIN_BET] = 0.05;
-  params._check_probs[random_params_t::HALF_POT_SIZED_BET] = 0.3;
-  params._check_probs[random_params_t::POT_SIZED_BET] = 0.12;
-  params._check_probs[random_params_t::ALL_IN_BET] = 0.03;
-  params._call_probs[random_params_t::FOLD] = 0.2;
-  params._call_probs[random_params_t::CALL] = 0.6;
-  params._call_probs[random_params_t::MIN_RAISE] = 0.1;
-  params._call_probs[random_params_t::POT_SIZED_RAISE] = 0.07;
-  params._call_probs[random_params_t::ALL_IN_RAISE] = 0.03;
+  random_nl_params_t params;
+  params._check_probs[random_nl_params_t::CHECK] = 0.5;
+  params._check_probs[random_nl_params_t::MIN_BET] = 0.05;
+  params._check_probs[random_nl_params_t::HALF_POT_SIZED_BET] = 0.3;
+  params._check_probs[random_nl_params_t::POT_SIZED_BET] = 0.12;
+  params._check_probs[random_nl_params_t::ALL_IN_BET] = 0.03;
+  params._call_probs[random_nl_params_t::FOLD] = 0.2;
+  params._call_probs[random_nl_params_t::CALL] = 0.6;
+  params._call_probs[random_nl_params_t::MIN_RAISE] = 0.1;
+  params._call_probs[random_nl_params_t::POT_SIZED_RAISE] = 0.07;
+  params._call_probs[random_nl_params_t::ALL_IN_RAISE] = 0.03;
 
   chip_amount_t stack_size = 1000;
   chip_amount_t small_blind_size = 5;
