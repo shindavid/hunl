@@ -10,7 +10,7 @@ namespace ps = pokerstove;
  */
 class Holding {
 private:
-  ps::CardSet _cards;
+  const ps::CardSet _cards;
 
   int _code1() const { return __builtin_ffsll(_cards.mask()) - 1; }
   int _code2() const { return 63 - __builtin_clzll(_cards.mask()); }

@@ -20,7 +20,7 @@ public:
 
   ps::CardSet getCards() const { return _card_set; }
   ps::Card getCard(int i) const { return _cards[i]; }
-  unsigned getSize() const { return _cards_set.size(); }
+  unsigned getSize() const { return _card_set.size(); }
 
   bool operator==(const Board& board) const {
     return !memcmp(this->_cards, board._cards, sizeof(_cards));

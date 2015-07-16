@@ -1,51 +1,60 @@
 // Included by Session.h
+#include "SessionLog.h"
 
-Session::Session(Player* p0, Player* p1, chip_amount_t starting_stack_size,
-    chip_amount_t small_blind_size, chip_amount_t big_blind_size, uint64_t base_seed) :
-  _params(__next_id, p0, p1, starting_stack_size, small_blind_size, big_blind_size),
-  _base_seed(base_seed)
-{
-  __next_id++;
-  _log.recordSessionStart(_params, base_seed);
+const BettingRules& Session::getBettingRules() const { return *_betting_rules; }
+uint64_t Session::getBaseSeed() const { return _base_seed; }
+const Player* Session::getPlayer(int i) const { return _players[i]; }
+session_id_t Session::getCurrentHandID() const { return _current_hand_id; }
+seat_t Session::getButton() const { return _button; }
+chip_amount_t Session::getScore(seat_t seat) const { return _score[seat]; }
+
+Session::Session(Player* p0, Player* p1, const BettingRules* betting_rules, uint64_t base_seed)
+  : _players{p0, p1}
+  , _score{0,0}
+  , _betting_rules(betting_rules)
+  , _base_seed(base_seed)
+{}
+
+template<typename E>
+void Session::broadcastEvent(const HandState& state, seat_t seat, const E& event) const {
+  _players[seat]->handleEvent(state, event);
 }
 
-template<>
-void Session::handleEvent(HandState& state, seat_t seat, const HoleCardDealEvent* event)
-{
-  ps::CardSet set;
-  set.insert(event->getCard(0));
-  set.insert(event->getCard(1));
-  state.setHolding(event->getSeat(), set);
-  _log.record(&state, event);
-}
-
-template<>
-void Session::handleEvent(HandState& state, const PublicDealEvent* event)
-{
-  state.setActionOn(!_state.getButton());
-  Board& board = state.getBoard();
-  for (int i=0; i<event->getNumCards(); ++i) {
-    board.add(event->getCard(i));
+template<typename E>
+void Session::broadcastEvent(const HandState& state, const E& event) const {
+  for (seat_t seat=0; seat<NUM_PLAYERS; ++seat) {
+    _players[seat]->handleEvent(state, event);
   }
-  _log.record(&state, event);
 }
 
 template<>
-void Session::handleEvent(HandState& state, seat_t seat, const BlindPostDecision* event)
+void Session::handleEvent(SessionLog& log, HandState& state, const PublicDealEvent& event)
+{
+  state.setActionOn(!_button);
+  Board& board = state.getBoard();
+  for (int i=0; i<event.getNumCards(); ++i) {
+    board.add(event.getCard(i));
+  }
+  log.record(*this, state, event);
+}
+
+template<>
+void Session::handleEvent(SessionLog& log, HandState& state, seat_t seat,
+    const BlindPostDecision& event)
 {
   assert(state.getActionOn()==seat);
-  chip_amount_t amount = event->getAmount();
+  chip_amount_t amount = event.getAmount();
   state.addWagerCurrentRound(seat, amount);
   assert(state._validate_chip_amounts());
   
-  _log.record(&state, event);
+  log.record(*this, state, event);
 }
 
 template<>
-void Session::handleEvent(HandState& state, seat_t seat, const BettingDecision* event)
+void Session::handleEvent(SessionLog& log, HandState& state, seat_t seat, const BettingDecision& event)
 {
-  chip_amount_t amount = event->getAmount();
-  action_type_t action_type = event->getActionType();
+  chip_amount_t amount = event.getAmount();
+  ActionType action_type = event.getActionType();
   bool all_in = state.isAllIn(seat);
   bool fold = action_type==ACTION_FOLD;
 
@@ -57,32 +66,51 @@ void Session::handleEvent(HandState& state, seat_t seat, const BettingDecision* 
   state.setActionOn(!seat);
   assert(state._validate_chip_amounts());
 
-  _log.record(&state, event);
+  log.record(*this, state, event);
 }
 
-void Session::_do_betting_round(HandState& hand_state) {
+void Session::_validate_decision(const HandState& hand_state, const BettingDecision& decision) {
+  chip_amount_t amount = decision.getAmount();
+  chip_amount_t legal_call = _betting_rules->getLegalCheckOrCall(hand_state);
+  chip_amount_t min_legal_raise = _betting_rules->getMinLegalBetOrRaise(hand_state);
+  chip_amount_t max_legal_raise = _betting_rules->getMaxLegalBetOrRaise(hand_state);
+  bool legal_more = amount >= min_legal_raise && amount <= max_legal_raise;
+
+  switch (decision.getActionType()) {
+    case ACTION_BET: assert(legal_call==0 && amount>0 && legal_more); return;
+    case ACTION_RAISE: assert(legal_call>0 && amount>legal_call && legal_more); return;
+    case ACTION_CHECK: assert(amount==0 && legal_call==0); return;
+    case ACTION_CALL: assert(amount>0 && amount==legal_call); return;
+    case ACTION_FOLD: assert(amount==0 && legal_call>0); return;
+  }
+}
+
+void Session::_do_betting_round(SessionLog& log, HandState& hand_state) {
   while (!hand_state.isCurrentBettingRoundDone()) {
     seat_t seat = hand_state.getActionOn();
-    BettingDecisionRequest request(&hand_state);
-    BettingDecision decision = _params.getPlayer(seat)->handleRequest(&request);
-    request.validate(decision);
+    BettingDecision decision = _players[seat]->makeDecision(hand_state);
+    _validate_decision(hand_state, decision);
 
-    handleEvent(hand_state, seat, &decision);
-    broadcastEvent(hand_state, !seat, &decision);
+    handleEvent(log, hand_state, seat, decision);
+    broadcastEvent(hand_state, !seat, decision);
   }
   hand_state.advanceBettingRound();
 }
 
+void Session::_move_button() {
+  _button = (_button + 1) % NUM_PLAYERS;
+}
+
 void Session::_init_hand() {
-  _state.incrementHandID();
-  _state.moveButton();
+  _current_hand_id++;
+  _move_button();
   
-  uint64_t seed = _base_seed + _state.getCurrentHandID();
+  uint64_t seed = _base_seed + _current_hand_id;
   srand(seed);
   _deck.shuffle();
 }
 
-void Session::_main_loop(HandState& hand_state) {
+void Session::_main_loop(SessionLog& log, HandState& hand_state) {
   // Pre-deal cards before any of the Player's start calling rand()
   ps::Card holdings[2][2];
   ps::Card flop[3];
@@ -101,77 +129,82 @@ void Session::_main_loop(HandState& hand_state) {
   river = _deck.deal();
 
   for (seat_t seat=0; seat<2; ++seat) {
-    HoleCardDealEvent hole_card_event(holdings[seat], seat);
-    _params.getPlayer(seat)->handleEvent(hand_state, &hole_card_event);
-    handleEvent(hand_state, seat, &hole_card_event);
+    HoleCardDealEvent event(holdings[seat], seat);
+    _players[seat]->handleEvent(hand_state, event);
+    hand_state.setHolding(event.getSeat(), event.getCard(0), event.getCard(1));
+    log.record(*this, hand_state, event);
   }
 
-  seat_t button = hand_state.getButton();
+  hand_state.setActionOn(_button);
+  BlindPostDecision small_blind = _players[_button]->handleBlindRequest(SMALL_BLIND);
+  log.record(*this, hand_state, small_blind);
   
-  hand_state.setActionOn(button);
-  BlindPostRequest small_blind_request(&hand_state);
-  BlindPostDecision small_blind_post = _params.getPlayer(button)->handleRequest(&small_blind_request);
-  small_blind_request.validate(small_blind_post);
-  handleEvent(hand_state, button, &small_blind_post);
+  hand_state.setActionOn(!_button);
+  BlindPostDecision big_blind = _players[!_button]->handleBlindRequest(BIG_BLIND);
+  log.record(*this, hand_state, big_blind);
 
-  hand_state.setActionOn(!button);
-  BlindPostRequest big_blind_request(&hand_state);
-  BlindPostDecision big_blind_post = _params.getPlayer(!button)->handleRequest(&big_blind_request);
-  big_blind_request.validate(big_blind_post);
-  handleEvent(hand_state, !button, &big_blind_post);
+  hand_state.payBlinds(_button, _betting_rules->getSmallBlind(), _betting_rules->getBigBlind());
 
-  hand_state.setActionOn(button);
-  _do_betting_round(hand_state);
+  hand_state.setActionOn(_button);
+  hand_state.setBettingRound(ROUND_PREFLOP);
+  _do_betting_round(log, hand_state);
   if (hand_state.isDone()) return;
  
   PublicDealEvent flop_event(flop, 3);
-  handleEvent(hand_state, &flop_event);
-  broadcastEvent(hand_state, &flop_event);
-  _do_betting_round(hand_state);
+  handleEvent(log, hand_state, flop_event);
+  broadcastEvent(hand_state, flop_event);
+  hand_state.setBettingRound(ROUND_FLOP);
+  _do_betting_round(log, hand_state);
   if (hand_state.isDone()) return;
 
   PublicDealEvent turn_event(&turn, 1);
-  handleEvent(hand_state, &turn_event);
-  broadcastEvent(hand_state, &turn_event);
-  _do_betting_round(hand_state);
+  handleEvent(log, hand_state, turn_event);
+  broadcastEvent(hand_state, turn_event);
+  hand_state.setBettingRound(ROUND_TURN);
+  _do_betting_round(log, hand_state);
   if (hand_state.isDone()) return;
   
   PublicDealEvent river_event(&river, 1);
-  handleEvent(hand_state, &river_event);
-  broadcastEvent(hand_state, &river_event);
-  _do_betting_round(hand_state);
+  handleEvent(log, hand_state, river_event);
+  broadcastEvent(hand_state, river_event);
+  hand_state.setBettingRound(ROUND_RIVER);
+  _do_betting_round(log, hand_state);
 }
 
-void Session::_award_pot(const HandState& hand_state, seat_t seat) {
+void Session::_update_score(seat_t seat, chip_amount_t delta) {
+  _score[seat] += delta;
+}
+
+void Session::_award_pot(SessionLog& log, const HandState& hand_state, seat_t seat) {
   chip_amount_t net_gain = hand_state.getPotSize() - hand_state.getAmountWageredPriorRounds(seat);
   chip_amount_t net_loss = - hand_state.getAmountWageredPriorRounds(!seat);
 
   assert(net_gain + net_loss == 0);
-  _state.updateScore(seat, net_gain);
-  _state.updateScore(!seat, net_loss);
+  _update_score(seat, net_gain);
+  _update_score(!seat, net_loss);
 
   PotWinEvent win_event(&hand_state, seat);
-  broadcastEvent(hand_state, &win_event);
-  _log.record(&hand_state, &win_event);
+  broadcastEvent(hand_state, win_event);
+  log.record(*this, hand_state, win_event);
 }
 
-void Session::_split_pot(const HandState& hand_state) {
+void Session::_split_pot(SessionLog& log, const HandState& hand_state) {
   // no change to scores
   
   PotSplitEvent split_event(&hand_state);
-  broadcastEvent(hand_state, &split_event);
-  _log.record(&hand_state, &split_event);
+  broadcastEvent(hand_state, split_event);
+  log.record(*this, hand_state, split_event);
 }
 
-void Session::_finish_hand(HandState& hand_state) {
+void Session::_finish_hand(SessionLog& log, HandState& hand_state) {
   assert(!(hand_state.hasFolded(0) && hand_state.hasFolded(1)));
   assert(hand_state.getPotSize() == 
       hand_state.getAmountWageredPriorRounds(0) + hand_state.getAmountWageredPriorRounds(1));
 
   if (hand_state.hasFolded(0)) {
-    _award_pot(hand_state, 1);
+    _award_pot(log, hand_state, 1);
   } else if (hand_state.hasFolded(1)) {
-    _award_pot(hand_state, 0);
+    _award_pot(log, hand_state, 0);
   } else {
     hand_state.setShowdownPerformed();
     ps::PokerEvaluation evals[2];
@@ -183,25 +216,24 @@ void Session::_finish_hand(HandState& hand_state) {
           hand_state.getBoard().getCards()).high();
       evals[seat] = eval;
       ShowdownEvent showdown_event(holding.getCard1(), holding.getCard2(), eval, seat);
-      broadcastEvent(hand_state, !seat, &showdown_event);
-      _log.record(&hand_state, &showdown_event);
+      broadcastEvent(hand_state, !seat, showdown_event);
+      log.record(*this, hand_state, showdown_event);
     }
     if (evals[0] > evals[1]) {
-      _award_pot(hand_state, 0);
+      _award_pot(log, hand_state, 0);
     } else if (evals[0] < evals[1]) {
-      _award_pot(hand_state, 1);
+      _award_pot(log, hand_state, 1);
     } else {
-      _split_pot(hand_state);
+      _split_pot(log, hand_state);
     }
   }
 }
 
-void Session::playHand() {
+void Session::playHand(SessionLog& log) {
   _init_hand();
-
-  HandState hand_state(_params, _state);
-  _log.recordHandStart(&hand_state);
-  _main_loop(hand_state);
-  _finish_hand(hand_state);
+  HandState hand_state(_betting_rules->getStackSize(), _button);
+  log.recordHandStart(*this, hand_state);
+  _main_loop(log, hand_state);
+  _finish_hand(log, hand_state);
 }
 

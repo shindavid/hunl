@@ -3,6 +3,7 @@
  */
 
 #include "engine/Session.h"
+#include "engine/SessionLog.h"
 #include "strategy/RandomPlayer.h"
 
 int main() {
@@ -18,17 +19,22 @@ int main() {
   params._call_probs[random_params_t::POT_SIZED_RAISE] = 0.07;
   params._call_probs[random_params_t::ALL_IN_RAISE] = 0.03;
 
-  RandomPlayer david(params, "David");
-  RandomPlayer bryan(params, "Bryan");
-
   chip_amount_t stack_size = 1000;
   chip_amount_t small_blind_size = 5;
   chip_amount_t big_blind_size = 10;
+  NoLimitRules rules(stack_size, small_blind_size, big_blind_size);
+
+  RandomPlayer david(&rules, params, "David");
+  RandomPlayer bryan(&rules, params, "Bryan");
+
+  BettingFormat betting_format, FIXED_LIMIT;
   uint64_t seed = 100;
-  Session session(&david, &bryan, stack_size, small_blind_size, big_blind_size, seed);
+  Session session(&david, &bryan, &rules, seed);
+  SessionLog log;
+  log.recordSessionStart(session);
 
   int N = 100;
   for (int i=0; i<N; ++i) {
-    session.playHand();
+    session.playHand(log);
   }
 }

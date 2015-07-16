@@ -32,12 +32,10 @@ private:
   SimpleWeightedDice<random_params_t::NUM_CAN_CALL_RESPONSES> _call_dice;
 
 public:
-  RandomPlayer(const random_params_t& random_params, const char* name) :
-    Player(name),
-    _check_dice(random_params._check_probs),
-    _call_dice(random_params._call_probs) {}
+  RandomPlayer(const BettingRules* betting_rules, const random_params_t& random_params,
+      const char* name);
 
-  virtual BettingDecision handleRequest(const BettingDecisionRequest* request);
+  virtual BettingDecision makeDecision(const HandState& hand_state);
 };
 
 #include "RandomPlayerINLINES.cpp"

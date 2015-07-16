@@ -9,7 +9,7 @@ typedef uint64_t hand_id_t;
 typedef int32_t chip_amount_t;
 typedef uint8_t seat_t;
 
-enum action_type_t {
+enum ActionType {
   ACTION_BET,
   ACTION_RAISE,
   ACTION_CHECK,
@@ -23,10 +23,15 @@ enum BlindType {
 };
 
 enum BettingRound {
-  PREFLOP,
-  FLOP,
-  TURN,
-  RIVER
+  ROUND_PREFLOP,
+  ROUND_FLOP,
+  ROUND_TURN,
+  ROUND_RIVER
+};
+
+enum BettingFormat {
+  NO_LIMIT,
+  FIXED_LIMIT
 };
 
 #define NUM_PLAYERS 2

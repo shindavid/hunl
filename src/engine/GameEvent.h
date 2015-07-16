@@ -54,43 +54,14 @@ private:
    * How many additional chips to put into the pot on the current action.
    */
   const chip_amount_t _amount;
-  const action_type_t _action_type;
+  const ActionType _action_type;
 
 public:
-  BettingDecision(chip_amount_t amount, action_type_t action_type) : 
+  BettingDecision(chip_amount_t amount, ActionType action_type) : 
     _amount(amount), _action_type(action_type) {}
 
   chip_amount_t getAmount() const { return _amount; }
-  action_type_t getActionType() const { return _action_type; }
-};
-
-class BettingDecisionRequest {
-private:
-  const HandState* _hand_state;
-
-public:
-  BettingDecisionRequest(const HandState* hand_state) : _hand_state(hand_state) {}
-
-  void validate(BettingDecision decision) const;
-  
-  /*
-   * If betting/raising, the minimum/maximum amount of chips that can be put in.
-   *
-   * Accounts for stack sizes.
-   */
-  chip_amount_t minLegalAdditionalAmount() const;
-  chip_amount_t maxLegalAdditionalAmount() const;
-  chip_amount_t getPotSize() const { return _hand_state->getPotSize(); }
-  chip_amount_t getPotentialPotSize() const { return _hand_state->getPotentialPotSize(); }
-
-  /*
-   * 0 means you can check.
-   */
-  chip_amount_t legalCallAmount() const;
-
-  chip_amount_t legalizeAdditionalAmount(chip_amount_t amount) const;
-
-  const HandState* getHandState() const { return _hand_state; }
+  ActionType getActionType() const { return _action_type; }
 };
 
 class BlindPostDecision {
@@ -103,19 +74,6 @@ public:
 
   chip_amount_t getAmount() const { return _amount; }
   BlindType getBlindType() const { return _btype; }
-};
-
-class BlindPostRequest {
-private:
-  const HandState* _hand_state;
-
-public:
-  BlindPostRequest(const HandState* hand_state) : _hand_state(hand_state) {}
-
-  void validate(BlindPostDecision decision) const;
-  
-  chip_amount_t getAmount() const;
-  BlindType getBlindType() const;
 };
 
 class ShowdownEvent {

@@ -1,10 +1,9 @@
 #pragma once
 
+#include "engine/BettingRules.h"
 #include "engine/Deck.h"
 #include "engine/HandState.h"
 #include "engine/Player.h"
-#include "engine/SessionLog.h"
-#include "engine/SessionParams.h"
 #include "engine/TypeDefs.h"
 #include "pokerstove/peval/CardSet.h"
 #include "pokerstove/peval/HoldemHandEvaluator.h"
@@ -14,13 +13,17 @@
 
 namespace ps = pokerstove;
 
+class SessionLog;
+
 class Session {
 private:
   ps::HoldemHandEvaluator _evaluator;
-  SessionLog _log;
-  const SessionParams _params;
-  SessionState _state;
+  const BettingRules* const _betting_rules;
+  Player* const _players[NUM_PLAYERS];
+  chip_amount_t _score[NUM_PLAYERS]; 
+  hand_id_t _current_hand_id = 0;
   Deck _deck;
+  seat_t _button = 0;
   
   /*
    * The seed determines the cards dealt out per hand. At the start of the i'th hand, the random seed is
@@ -32,44 +35,35 @@ private:
    */
   const uint64_t _base_seed;
 
+  void _update_score(seat_t seat, chip_amount_t delta);
+  void _move_button();
   void _init_hand();
-  void _main_loop(HandState& hand);
-  void _finish_hand(HandState& hand);
-  void _do_betting_round(HandState& hand);
-  void _award_pot(const HandState& public_state, seat_t seat);
-  void _split_pot(const HandState& public_state);
+  void _main_loop(SessionLog& log, HandState& hand);
+  void _finish_hand(SessionLog& log, HandState& hand);
+  void _do_betting_round(SessionLog& log, HandState& hand);
+  void _award_pot(SessionLog& log, const HandState& state, seat_t seat);
+  void _split_pot(SessionLog& log, const HandState& state);
+  void _validate_decision(const HandState& state, const BettingDecision& decision);
 
-  template<typename E> void handleEvent(HandState& state, seat_t seat, const E* event);
-  template<typename E> void broadcastEvent(HandState& state, seat_t seat, const E* event) const {
-    state.getPlayer(seat)->handleEvent(state, event);
-  }
+  template<typename E> void handleEvent(SessionLog& log, HandState& state, const E& event);
+  template<typename E> void handleEvent(SessionLog& log, HandState& state, seat_t seat,
+      const E& event);
   
-  template<typename E> void handleEvent(HandState& state, const E* event);
-  template<typename E> void broadcastEvent(HandState& state, const E* event) const {
-    for (seat_t seat=0; seat<NUM_PLAYERS; ++seat) {
-      state.getPlayer(seat)->handleEvent(state, event);
-    }
-  }
-  template<typename E> void broadcastEvent(const HandState& state, const E* event) const {
-    for (seat_t seat=0; seat<NUM_PLAYERS; ++seat) {
-      state.getPlayer(seat)->handleEvent(state, event);
-    }
-  }
+  template<typename E> void broadcastEvent(const HandState& state, const E& event) const;
+  template<typename E> void broadcastEvent(const HandState& state, seat_t seat, const E& event) const;
 
 public:
-  Session(Player* p0, Player* p1, chip_amount_t stack_size, chip_amount_t small_blind_size,
-      chip_amount_t big_blind_size, uint64_t base_seed);
+  Session(Player* p0, Player* p1, const BettingRules* betting_rules, uint64_t base_seed);
 
-  void logSessionStart();
-  void logHandStart();
-  void playHand();
-  uint64_t getBaseSeed() const { return _base_seed; }
-
-private:
-  static session_id_t __next_id;
+  const Player* getPlayer(int i) const;
+  const BettingRules& getBettingRules() const;
+  uint64_t getBaseSeed() const;
+  session_id_t getCurrentHandID() const;
+  seat_t getButton() const;
+  chip_amount_t getScore(seat_t seat) const;
+  
+  void playHand(SessionLog& log);
 };
-
-session_id_t Session::__next_id = 0;
 
 #include "engine/SessionINLINES.cpp"
 
