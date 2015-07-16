@@ -1,11 +1,11 @@
 
-RandomPlayer::RandomPlayer(const BettingRules* betting_rules, const random_params_t& random_params,
+RandomNLPlayer::RandomNLPlayer(const BettingRules* betting_rules, const random_params_t& random_params,
     const char* name)
   : Player(betting_rules, name)
   , _check_dice(random_params._check_probs)
   , _call_dice(random_params._call_probs) {}
 
-BettingDecision RandomPlayer::makeDecision(const HandState& state) {
+BettingDecision RandomNLPlayer::makeDecision(const HandState& state) {
   chip_amount_t call_amount = _betting_rules->getLegalCheckOrCall(state);
   if (call_amount==0) {
     random_params_t::CanCheckResponse choice = (random_params_t::CanCheckResponse)_check_dice.roll();

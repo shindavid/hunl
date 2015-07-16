@@ -4,7 +4,7 @@
 
 #include "engine/Session.h"
 #include "engine/SessionLog.h"
-#include "strategy/RandomPlayer.h"
+#include "strategy/RandomNLPlayer.h"
 
 int main() {
   random_params_t params;
@@ -24,8 +24,8 @@ int main() {
   chip_amount_t big_blind_size = 10;
   NoLimitRules rules(stack_size, small_blind_size, big_blind_size);
 
-  RandomPlayer david(&rules, params, "David");
-  RandomPlayer bryan(&rules, params, "Bryan");
+  RandomNLPlayer david(&rules, params, "David");
+  RandomNLPlayer bryan(&rules, params, "Bryan");
 
   BettingFormat betting_format, FIXED_LIMIT;
   uint64_t seed = 100;

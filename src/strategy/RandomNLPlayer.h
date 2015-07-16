@@ -26,17 +26,17 @@ struct random_params_t {
   double _call_probs[NUM_CAN_CALL_RESPONSES];
 };
 
-class RandomPlayer : public Player {
+class RandomNLPlayer : public Player {
 private:
   SimpleWeightedDice<random_params_t::NUM_CAN_CHECK_RESPONSES> _check_dice;
   SimpleWeightedDice<random_params_t::NUM_CAN_CALL_RESPONSES> _call_dice;
 
 public:
-  RandomPlayer(const BettingRules* betting_rules, const random_params_t& random_params,
+  RandomNLPlayer(const BettingRules* betting_rules, const random_params_t& random_params,
       const char* name);
 
   virtual BettingDecision makeDecision(const HandState& hand_state);
 };
 
-#include "RandomPlayerINLINES.cpp"
+#include "RandomNLPlayerINLINES.cpp"
 
