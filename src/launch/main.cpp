@@ -4,9 +4,10 @@
 
 #include "engine/Session.h"
 #include "engine/SessionLog.h"
+#include "strategy/RandomFLPlayer.h"
 #include "strategy/RandomNLPlayer.h"
 
-int main() {
+void NL() {
   random_nl_params_t params;
   params._check_probs[random_nl_params_t::CHECK] = 0.5;
   params._check_probs[random_nl_params_t::MIN_BET] = 0.05;
@@ -27,7 +28,6 @@ int main() {
   RandomNLPlayer david(&rules, params, "David");
   RandomNLPlayer bryan(&rules, params, "Bryan");
 
-  BettingFormat betting_format, FIXED_LIMIT;
   uint64_t seed = 100;
   Session session(&david, &bryan, &rules, seed);
   SessionLog log;
@@ -37,4 +37,33 @@ int main() {
   for (int i=0; i<N; ++i) {
     session.playHand(log);
   }
+}
+
+void FL() {
+  random_fl_params_t params;
+  params._probs[random_fl_params_t::F] = 0.1;
+  params._probs[random_fl_params_t::C] = 0.3;
+  params._probs[random_fl_params_t::R] = 0.6;
+
+  chip_amount_t small_blind_size = 5;
+  chip_amount_t big_blind_size = 10;
+  FixedLimitRules rules(small_blind_size, big_blind_size);
+
+  RandomFLPlayer david(&rules, params, "David");
+  RandomFLPlayer bryan(&rules, params, "Bryan");
+
+  uint64_t seed = 200;
+  Session session(&david, &bryan, &rules, seed);
+  SessionLog log;
+  log.recordSessionStart(session);
+
+  int N = 100;
+  for (int i=0; i<N; ++i) {
+    session.playHand(log);
+  }
+}
+
+int main() {
+  //NL();
+  FL();
 }
