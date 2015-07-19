@@ -45,13 +45,6 @@ void HandState::payBlinds(seat_t button, chip_amount_t small_blind, chip_amount_
   addWagerCurrentRound(!button, big_blind);
 }
 
-void HandState::setHolding(seat_t seat, ps::Card c1, ps::Card c2) {
-  ps::CardSet set;
-  set.insert(c1);
-  set.insert(c2);
-  new (&_holdings[seat]) Holding(set);
-}
-
 chip_amount_t HandState::getPotSize() const {
   chip_amount_t total = 0;
   for (int i=0; i<NUM_PLAYERS; ++i) {

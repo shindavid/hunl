@@ -20,6 +20,7 @@ private:
   ps::HoldemHandEvaluator _evaluator;
   const BettingRules* const _betting_rules;
   Player* const _players[NUM_PLAYERS];
+  Holding _holdings[NUM_PLAYERS];
   chip_amount_t _score[NUM_PLAYERS]; 
   hand_id_t _current_hand_id = 0;
   Deck _deck;
@@ -35,6 +36,8 @@ private:
    */
   const uint64_t _base_seed;
 
+  void _set_holding(seat_t seat, ps::Card c1, ps::Card c2);
+  Holding _get_holding(seat_t seat) const;
   void _update_score(seat_t seat, chip_amount_t delta);
   void _move_button();
   void _init_hand();

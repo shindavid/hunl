@@ -13,7 +13,6 @@ namespace ps = pokerstove;
 class HandState {
 private:
   const chip_amount_t _starting_stack_size;
-  Holding _holdings[NUM_PLAYERS];
   Board _board;
 
   chip_amount_t _stack_size[NUM_PLAYERS];
@@ -26,25 +25,13 @@ private:
   BettingRound _betting_round;
   bool _folded[NUM_PLAYERS];
   bool _is_current_betting_round_done = false;
-  bool _showdown_performed = false;
 
 public:
   HandState(chip_amount_t starting_stack_size, seat_t button);
 
-  void setShowdownPerformed() { _showdown_performed = true; }
-  Holding getHolding(seat_t seat) const {
-    assert(_showdown_performed);
-    return _holdings[seat];
-  }
-
   void payBlinds(seat_t button, chip_amount_t small_blind, chip_amount_t big_blind);
-
-  void setHolding(seat_t seat, ps::Card c1, ps::Card c2);
-
   seat_t getButton() const { return _button; }
-  
   void setCurrentBettingRoundDone(bool x) { _is_current_betting_round_done = x; }
-
   bool isDone() const { return _folded[0] || _folded[1]; }
   bool isCurrentBettingRoundDone() const;
   

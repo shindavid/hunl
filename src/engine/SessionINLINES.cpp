@@ -85,6 +85,17 @@ void Session::_validate_decision(const HandState& hand_state, const BettingDecis
   }
 }
 
+void Session::_set_holding(seat_t seat, ps::Card c1, ps::Card c2) {
+  ps::CardSet set;
+  set.insert(c1);
+  set.insert(c2);
+  new (&_holdings[seat]) Holding(set);
+}
+
+Holding Session::_get_holding(seat_t seat) const {
+  return _holdings[seat];
+}
+
 void Session::_do_betting_round(SessionLog& log, HandState& hand_state) {
   while (!hand_state.isCurrentBettingRoundDone()) {
     seat_t seat = hand_state.getActionOn();
@@ -131,7 +142,7 @@ void Session::_main_loop(SessionLog& log, HandState& hand_state) {
   for (seat_t seat=0; seat<2; ++seat) {
     HoleCardDealEvent event(holdings[seat], seat);
     _players[seat]->handleEvent(hand_state, event);
-    hand_state.setHolding(event.getSeat(), event.getCard(0), event.getCard(1));
+    _set_holding(event.getSeat(), event.getCard(0), event.getCard(1));
     log.record(*this, hand_state, event);
   }
 
@@ -206,12 +217,11 @@ void Session::_finish_hand(SessionLog& log, HandState& hand_state) {
   } else if (hand_state.hasFolded(1)) {
     _award_pot(log, hand_state, 0);
   } else {
-    hand_state.setShowdownPerformed();
     ps::PokerEvaluation evals[2];
     seat_t showdown_order[2] = {!hand_state.getButton(), hand_state.getButton()};
     for (int i=0; i<2; ++i) {
       seat_t seat = showdown_order[i];
-      Holding holding = hand_state.getHolding(seat);
+      Holding holding = _get_holding(seat);
       ps::PokerEvaluation eval = _evaluator.evaluateHand(holding.getCardSet(), 
           hand_state.getBoard().getCards()).high();
       evals[seat] = eval;
