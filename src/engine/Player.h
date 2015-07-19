@@ -18,8 +18,8 @@ protected:
 public:
   Player(const BettingRules* betting_rules, const char* name);
 
-  player_id_t getID() const { return _id; }
-  const char* getName() const { return _name.c_str(); }
+  player_id_t getID() const;
+  const char* getName() const;
 
   virtual BettingDecision makeDecision(const HandState& hand_state) = 0;
   virtual BlindPostDecision handleBlindRequest(BlindType btype);

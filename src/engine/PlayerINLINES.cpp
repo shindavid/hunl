@@ -5,6 +5,9 @@ Player::Player(const BettingRules* betting_rules, const char* name)
   , _id(__next_id++)
   , _name(name) {}
 
+player_id_t Player::getID() const { return _id; }
+const char* Player::getName() const { return _name.c_str(); }
+
 BettingDecision Player::_createBettingDecision(const HandState& hand_state,
     chip_amount_t amount) const
 {

@@ -13,17 +13,13 @@ private:
   ps::Card _cards[5];
 
 public:
-  void add(ps::Card card) {
-    _cards[getSize()] = card;
-    _card_set.insert(card);
-  }
+  void add(ps::Card card);
+  ps::CardSet getCards() const;
+  ps::Card getCard(int i) const;
+  unsigned getSize() const;
 
-  ps::CardSet getCards() const { return _card_set; }
-  ps::Card getCard(int i) const { return _cards[i]; }
-  unsigned getSize() const { return _card_set.size(); }
-
-  bool operator==(const Board& board) const {
-    return !memcmp(this->_cards, board._cards, sizeof(_cards));
-  }
+  bool operator==(const Board& board) const;
 };
+
+#include "BoardINLINES.cpp"
 
