@@ -30,31 +30,28 @@ public:
   HandState(chip_amount_t starting_stack_size, seat_t button);
 
   void payBlinds(seat_t button, chip_amount_t small_blind, chip_amount_t big_blind);
-  seat_t getButton() const { return _button; }
-  void setCurrentBettingRoundDone(bool x) { _is_current_betting_round_done = x; }
-  bool isDone() const { return _folded[0] || _folded[1]; }
+  seat_t getButton() const;
+  void setCurrentBettingRoundDone(bool x);
+  bool isDone() const;
   bool isCurrentBettingRoundDone() const;
   
-  seat_t getActionOn() const { return _action_on; }
-  void setActionOn(seat_t seat) {
-    _action_on = seat;
-  }
+  seat_t getActionOn() const;
+  void setActionOn(seat_t seat);
 
-  BettingRound getBettingRound() const { return _betting_round; }
-  void setBettingRound(BettingRound x) { _betting_round = x; }
+  BettingRound getBettingRound() const;
+  void setBettingRound(BettingRound x);
 
-  bool hasFolded(seat_t seat) const { return _folded[seat]; }
-  void setFolded(seat_t seat, bool x) { _folded[seat] = x; }
+  bool hasFolded(seat_t seat) const;
+  void setFolded(seat_t seat, bool x);
 
   chip_amount_t getAmountWageredPriorRounds(seat_t seat) const;
   chip_amount_t getAmountWageredCurrentRound(seat_t seat) const;
   chip_amount_t getMaxAmountWageredCurrentRound() const;
   void addWagerCurrentRound(seat_t seat, chip_amount_t amount);
-  void incrementGlobalActionCount(bool x=true) { _global_action_count += x?1:0; }
-  void setActionCount(seat_t seat) { _action_count[seat] = _global_action_count; }
+  void incrementGlobalActionCount(bool x=true);
+  void setActionCount(seat_t seat);
 
-  chip_amount_t getRemainingChips(seat_t seat) const { return _stack_size[seat]; }
-
+  chip_amount_t getRemainingChips(seat_t seat) const;
   chip_amount_t getPotentialPotSize() const;  // if current bet called
   chip_amount_t getPotSize() const;
 

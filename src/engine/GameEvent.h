@@ -15,17 +15,10 @@ private:
   int _n;
 
 public:
-  PublicDealEvent(ps::Card* cards, int n) {
-    assert(n>=0 && n<=4);
-    for (int i=0; i<n; ++i) {
-      _cards[i] = cards[i];
-    }
+  PublicDealEvent(ps::Card* cards, int n);
 
-    _n = n;
-  }
-
-  ps::Card getCard(int i) const { return _cards[i]; }
-  int getNumCards() const { return _n; }
+  ps::Card getCard(int i) const;
+  int getNumCards() const;
 };
 static_assert(sizeof(PublicDealEvent)<=8, "oversized PublicDealEvent");
 
@@ -36,14 +29,10 @@ private:
   const seat_t _seat;
 
 public:
-  PrivateDealEvent(ps::Card cards[n], seat_t seat) : _seat(seat) {
-    for (int i=0; i<n; ++i) {
-      _cards[i] = cards[i];
-    }
-  }
+  PrivateDealEvent(ps::Card cards[n], seat_t seat);
   
-  seat_t getSeat() const { return _seat; }
-  ps::Card getCard(int i) const { return _cards[i]; }
+  seat_t getSeat() const;
+  ps::Card getCard(int i) const;
 };
 
 typedef PrivateDealEvent<2> HoleCardDealEvent;
@@ -57,11 +46,10 @@ private:
   const ActionType _action_type;
 
 public:
-  BettingDecision(chip_amount_t amount, ActionType action_type) : 
-    _amount(amount), _action_type(action_type) {}
+  BettingDecision(chip_amount_t amount, ActionType action_type);
 
-  chip_amount_t getAmount() const { return _amount; }
-  ActionType getActionType() const { return _action_type; }
+  chip_amount_t getAmount() const;
+  ActionType getActionType() const;
 };
 
 class BlindPostDecision {
@@ -70,10 +58,10 @@ private:
   const BlindType _btype;
 
 public:
-  BlindPostDecision(chip_amount_t amount, BlindType btype) : _amount(amount), _btype(btype) {}
+  BlindPostDecision(chip_amount_t amount, BlindType btype);
 
-  chip_amount_t getAmount() const { return _amount; }
-  BlindType getBlindType() const { return _btype; }
+  chip_amount_t getAmount() const;
+  BlindType getBlindType() const;
 };
 
 class ShowdownEvent {
@@ -83,14 +71,11 @@ private:
   const seat_t _seat;
 
 public:
-  ShowdownEvent(ps::Card c0, ps::Card c1, ps::PokerEvaluation eval, seat_t seat)
-    : _hole_cards{c0, c1}
-    , _eval(eval)
-    , _seat(seat) {}
+  ShowdownEvent(ps::Card c0, ps::Card c1, ps::PokerEvaluation eval, seat_t seat);
 
-  ps::Card getCard(int i) const { return _hole_cards[i]; }
-  ps::PokerEvaluation getEval() const { return _eval; }
-  seat_t getSeat() const { return _seat; }
+  ps::Card getCard(int i) const;
+  ps::PokerEvaluation getEval() const;
+  seat_t getSeat() const;
 };
 
 class PotWinEvent {
@@ -99,11 +84,9 @@ private:
   seat_t _seat;
 
 public:
-  PotWinEvent(const HandState* hand_state, seat_t seat) : _hand_state(hand_state), _seat(seat) {
-    assert(getCalledPotSize() + getUncalledBetSize() == hand_state->getPotSize());
-  }
+  PotWinEvent(const HandState* hand_state, seat_t seat);
 
-  seat_t getSeat() const { return _seat; }
+  seat_t getSeat() const;
   chip_amount_t getCalledPotSize() const;
   chip_amount_t getUncalledBetSize() const;
 };
@@ -113,10 +96,7 @@ private:
   const HandState* _hand_state;
 
 public:
-  PotSplitEvent(const HandState* hand_state) : _hand_state(hand_state) {
-    static_assert(NUM_PLAYERS == 2, "multi-player games not supported");
-    assert(2*getSplitAmount() == _hand_state->getPotSize());
-  }
+  PotSplitEvent(const HandState* hand_state);
 
   chip_amount_t getSplitAmount() const;
 };

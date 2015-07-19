@@ -13,10 +13,22 @@ HandState::HandState(chip_amount_t starting_stack_size, seat_t button)
   }
 }
 
+seat_t HandState::getButton() const { return _button; }
+void HandState::setCurrentBettingRoundDone(bool x) { _is_current_betting_round_done = x; }
+bool HandState::isDone() const { return _folded[0] || _folded[1]; }
 bool HandState::isAllIn(seat_t seat) const { return getRemainingChips(seat)==0; }
 const Board& HandState::getBoard() const { return _board; }
 Board& HandState::getBoard() { return _board; }
 bool HandState::isPreflop() const { return _board.getSize() == 0; }
+seat_t HandState::getActionOn() const { return _action_on; }
+void HandState::setActionOn(seat_t seat) { _action_on = seat; }
+BettingRound HandState::getBettingRound() const { return _betting_round; }
+void HandState::setBettingRound(BettingRound x) { _betting_round = x; }
+bool HandState::hasFolded(seat_t seat) const { return _folded[seat]; }
+void HandState::setFolded(seat_t seat, bool x) { _folded[seat] = x; }
+void HandState::incrementGlobalActionCount(bool x) { _global_action_count += x?1:0; }
+void HandState::setActionCount(seat_t seat) { _action_count[seat] = _global_action_count; }
+chip_amount_t HandState::getRemainingChips(seat_t seat) const { return _stack_size[seat]; }
 
 chip_amount_t HandState::getAmountWageredPriorRounds(seat_t seat) const {
   return _wagered_prior_rounds[seat];
