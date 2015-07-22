@@ -23,6 +23,7 @@ public:
   ps::Card getCard1() const;
   ps::Card getCard2() const;
   bool contains(ps::Card c) const;
+  bool intersects(const Holding& h) const;
 
   bool operator==(const Holding& h) const;
   uint64_t hash() const;
