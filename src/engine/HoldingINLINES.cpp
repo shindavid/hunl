@@ -12,6 +12,7 @@ Holding::Holding(ps::CardSet cards) : _cards(cards) {
 ps::CardSet Holding::getCardSet() const { return _cards; }
 ps::Card Holding::getCard1() const { return ps::Card(_code1()); }
 ps::Card Holding::getCard2() const { return ps::Card(_code2()); }
+bool Holding::contains(ps::Card c) const { return _cards.contains(c); }
 
 bool Holding::operator==(const Holding& h) const { return _cards==h._cards; }
 
