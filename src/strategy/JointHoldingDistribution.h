@@ -49,6 +49,13 @@ public:
    * Removes all holdings that contains <card>.
    */
   void remove(ps::Card card);
+  
+  uint32_t size() const { return _size; }
+
+  const Unit& operator[] (int i) const { return _units[i]; }
+  Unit& operator[] (int i) { return _units[i]; }
+
+  template <class Compare> void sort(Compare comp);
 };
 
 #include "HoldingDistributionINLINES.cpp"

@@ -49,6 +49,8 @@ public:
    * Removes all holdings that contains <card>.
    */
   void remove(ps::Card card);
+
+  template <class Compare> void sort(Compare comp);
 };
 
 #include "HoldingDistributionINLINES.cpp"

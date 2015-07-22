@@ -46,3 +46,8 @@ void HoldingDistribution<Unit>::remove(ps::Card card) {
   _validate();
 }
 
+template<typename Unit, class Compare>
+void HoldingDistribution<Unit>::sort(Compare comp) {
+  std::sort(_units, &_units[_size], comp);
+}
+
