@@ -1,7 +1,6 @@
 #pragma once
 
-#include "RankPair.h"
-#include "SuitMask.h"
+#include "engine/Holding.h"
 #include "pokerstove/peval/Card.h"
 
 #include <exception>
@@ -9,35 +8,35 @@
 namespace ps = pokerstove;
 
 /*
- * A hash-map whose keys are HoldingSet's.
- *
- * Temporarily making it inherit from std::unordered_map, bdsun will change implementation later.
+ * This is not an actual class to be used. Only here to serve as a spec for the class to be used
+ * as a template parameter for HoldingDistribution.
  */
-template<typename V, int N> class HoldingDistribution 
+struct AbstractWeightedHolding {
+  void init(Holding holding, float weight);
+
+  Holding getHolding() const;
+  void setHolding(Holding holding);
+
+  float getWeight() const;
+  void setWeight(float weight);
+};
+
+/*
+ * A probability distribution over Holding's.
+ *
+ * Does not support O(1) lookups. 
+ *
+ * Item must implement the class signature of AbstractWeightedHolding above.
+ */
+template<typename Unit> class HoldingDistribution 
 {
 private:
-  /*
-   * TODO: magic ordering of element_t fields based on sizeof(V) % 4?
-   */
-  struct element_t {
-    V _v;
-    float _weight = 0;
-    SuitMask _suit_mask;
-
-    element_t() = default;
-
-    element_t(float weight, SuitMask suit_mask) :
-      _weight(weight), _suit_mask(suit_mask) {}
-  };
-
-  struct bucket_t {
-    element_t _elements[N];
-  };
-
-  bucket_t _buckets[RankPair::NUM_RANK_PAIRS];
+  static const size_t sMaxSize = 52*51/2;
+  uint32_t _size;
   float _total_weight;
+  Unit _units[sMaxSize];
 
-  bool _validate_weights() const;
+  bool _validate() const;
 
 public:
   /*
@@ -49,11 +48,7 @@ public:
   /*
    * Removes all holdings that contains <card>.
    */
-  void remove(ps::Card card) { throw std::exception("TODO"); }
-
-  void regroupOnFlop(SuitCounts counts);
-  void regroupOnTurn(SuitCounts counts);
-  void regroupOnRiver(SuitCounts counts);
+  void remove(ps::Card card);
 };
 
 #include "HoldingDistributionINLINES.cpp"
