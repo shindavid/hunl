@@ -33,12 +33,12 @@ BlindPostDecision::BlindPostDecision(chip_amount_t amount, BlindType btype)
 chip_amount_t BlindPostDecision::getAmount() const { return _amount; }
 BlindType BlindPostDecision::getBlindType() const { return _btype; }
 
-ShowdownEvent::ShowdownEvent(ps::Card c0, ps::Card c1, ps::PokerEvaluation eval, seat_t seat)
-  : _hole_cards{c0, c1}
+ShowdownEvent::ShowdownEvent(Holding holding, ps::PokerEvaluation eval, seat_t seat)
+  : _holding(holding)
   , _eval(eval)
   , _seat(seat) {}
 
-ps::Card ShowdownEvent::getCard(int i) const { return _hole_cards[i]; }
+Holding ShowdownEvent::getHolding() const { return _holding; }
 ps::PokerEvaluation ShowdownEvent::getEval() const { return _eval; }
 seat_t ShowdownEvent::getSeat() const { return _seat; }
 

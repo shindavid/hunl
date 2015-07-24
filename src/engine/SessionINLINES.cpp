@@ -225,7 +225,7 @@ void Session::_finish_hand(SessionLog& log, HandState& hand_state) {
       ps::PokerEvaluation eval = _evaluator.evaluateHand(holding.getCardSet(), 
           hand_state.getBoard().getCards()).high();
       evals[seat] = eval;
-      ShowdownEvent showdown_event(holding.getCard1(), holding.getCard2(), eval, seat);
+      ShowdownEvent showdown_event(holding, eval, seat);
       broadcastEvent(hand_state, !seat, showdown_event);
       log.record(*this, hand_state, showdown_event);
     }

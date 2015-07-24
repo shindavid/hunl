@@ -2,6 +2,7 @@
 
 #include "pokerstove/peval/Card.h"
 #include "engine/HandState.h"
+#include "engine/Holding.h"
 #include "engine/TypeDefs.h"
 
 #include <assert.h>
@@ -66,13 +67,14 @@ public:
 
 class ShowdownEvent {
 private:
-  const ps::Card _hole_cards[2];
+  const Holding _holding;
   const ps::PokerEvaluation _eval;
   const seat_t _seat;
 
 public:
-  ShowdownEvent(ps::Card c0, ps::Card c1, ps::PokerEvaluation eval, seat_t seat);
+  ShowdownEvent(Holding holding, ps::PokerEvaluation eval, seat_t seat);
 
+  Holding getHolding() const;
   ps::Card getCard(int i) const;
   ps::PokerEvaluation getEval() const;
   seat_t getSeat() const;

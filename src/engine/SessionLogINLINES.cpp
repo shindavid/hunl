@@ -122,10 +122,9 @@ void SessionLog::record(const Session& session, const HandState& state, const Be
 template<>
 void SessionLog::record(const Session& session, const HandState& state, const ShowdownEvent& event)
 {
-  fprintf(stdout, "%s shows [%s %s] (%s).\n", 
+  fprintf(stdout, "%s shows [%s] (%s).\n", 
       session.getPlayer(event.getSeat())->getName(),
-      event.getCard(0).str().c_str(), event.getCard(1).str().c_str(),
-      event.getEval().str().c_str());
+      event.getHolding().str().c_str(), event.getEval().str().c_str());
 }
 
 template<>
