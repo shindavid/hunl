@@ -69,11 +69,13 @@ namespace rangecalc {
       for (; j<N && dist[j].getEval()==eval_i; ++j) {
         const RankedJointWeightedHolding& unit_j = dist[j];
         Holding holding_j = unit_j.getHolding();
+        int code1 = holding_j.getCard1().code();
+        int code2 = holding_j.getCard2().code();
         for (int p=0; p<2; ++p) {
           float weight_j = unit_j.getWeight(1);
           cumulative_subweight[p] += weight_j;
-          per_card_subweights[holding_j.getCard1().code()][p] += weight_j;
-          per_card_subweights[holding_j.getCard2().code()][p] += weight_j;
+          per_card_subweights[code1][p] += weight_j;
+          per_card_subweights[code2][p] += weight_j;
         }
       }
 
