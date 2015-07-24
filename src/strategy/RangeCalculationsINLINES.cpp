@@ -67,8 +67,8 @@ namespace rangecalc {
         const RankedJointWeightedHolding& unit_j = dist[j];
         Holding holding_j = unit_j.getHolding();
         for (int p=0; p<2; ++p) {
-          double weight_j = unit_j.getWeight(p);
-          cumulative_subweight += weight_j;
+          float weight_j = unit_j.getWeight(1);
+          cumulative_subweight[p] += weight_j;
           per_card_subweights[holding_j.getCard1().code()][p] += weight_j;
           per_card_subweights[holding_j.getCard2().code()][p] += weight_j;
         }
@@ -80,12 +80,23 @@ namespace rangecalc {
         int code1 = holding_k.getCard1().code();
         int code2 = holding_k.getCard2().code();
         for (int p=0; p<2; ++p) {
-          double weight_k = unit_k.getWeight(p);
+          float weight_k = unit_k.getWeight(p);
 
-          double win_weight = cumulative_weight[p] - per_card_weights[code1][p] -
+          float win_weight = cumulative_weight[p] - per_card_weights[code1][p] -
             per_card_weights[code2][p];
-          double tie_weight = weight_k + cumulative_subweight[p] - per_card_subweights[code1][p] -
+          float tie_weight = weight_k + cumulative_subweight[p] - per_card_subweights[code1][p] -
             per_card_subweights[code2][p];
+
+          /*
+          fprintf(stdout, "p%d %s win:%.4f[cum:%4f %s:%.4f %s:%.4f] "
+              "tie:%.4f[w:%.4f cum:%.4f %s:%.4f %s:%.4f]\n", p, holding_k.str().c_str(),
+              win_weight, cumulative_weight[p],
+              holding_k.getCard1().str().c_str(), per_card_weights[code1][p],
+              holding_k.getCard2().str().c_str(), per_card_weights[code2][p],
+              tie_weight, weight_k, cumulative_subweight[p],
+              holding_k.getCard1().str().c_str(), per_card_subweights[code1][p],
+              holding_k.getCard2().str().c_str(), per_card_subweights[code2][p]);
+              */
 
           // will divide by denominator later
           unit_k.setEquity(1-p, win_weight + 0.5*tie_weight);
@@ -102,20 +113,24 @@ namespace rangecalc {
         per_card_weights[k][1] += per_card_subweights[k][1];
       }
     }
-  }
 
-  for (i=0; i<N; ++i) {
-    RankedJointWeightedHolding& unit = dist[i];
-    Holding holding = unit.getHolding();
-    int code1 = holding.getCard1().code();
-    int code2 = holding.getCard2().code();
-    for (int p=0; p<2; ++p) {
-      float weight = unit.getWeight(p);
-      float numerator = unit.getEquity(p);
-      float denominator = weight + cumulative_weight[1-p] - per_card_weights[code1][1-p] -
-        per_card_weights[code2][1-p];
+    for (i=0; i<N; ++i) {
+      RankedJointWeightedHolding& unit = dist[i];
+      Holding holding = unit.getHolding();
+      int code1 = holding.getCard1().code();
+      int code2 = holding.getCard2().code();
+      for (int p=0; p<2; ++p) {
+        float weight = unit.getWeight(p);
+        float numerator = unit.getEquity(p);
+        float denominator = weight + cumulative_weight[1-p] - per_card_weights[code1][1-p] -
+          per_card_weights[code2][1-p];
 
-      unit.setEquity(p, numerator / denominator);
+        /*
+        fprintf(stdout, "p%d %s %.4f/%.4f -> %.4f\n", p, holding.str().c_str(), 
+            numerator, denominator, numerator/denominator);
+            */
+        unit.setEquity(p, numerator / denominator);
+      }
     }
   }
 }
