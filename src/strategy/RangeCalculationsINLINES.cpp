@@ -50,6 +50,8 @@ namespace rangecalc {
     dist.sort(RankCompare);
 
     uint32_t N = dist.size();
+
+    // need per-card weights to do inclusion-exclusion combinatorics
     float per_card_weights[52][2] = {};
     float cumulative_weight[2] = {};
 
@@ -58,10 +60,11 @@ namespace rangecalc {
       const RankedJointWeightedHolding& unit_i = dist[i];
       ps::PokerEvaluation eval_i = unit_i.getEval();
       
+      // need per-card weights to do inclusion-exclusion combinatorics
       float per_card_subweights[52][2] = {};
       float cumulative_subweight[2] = {};
      
-      // find tying hands
+      // find tying hands, need to find them separately because of 0.5 multiplier
       uint32_t j=i;
       for (; j<N && dist[j].getEval()==eval_i; ++j) {
         const RankedJointWeightedHolding& unit_j = dist[j];
@@ -82,23 +85,13 @@ namespace rangecalc {
         for (int p=0; p<2; ++p) {
           float weight_k = unit_k.getWeight(p);
 
+          // inclusion-exclusion combinatorics:
           float win_weight = cumulative_weight[p] - per_card_weights[code1][p] -
             per_card_weights[code2][p];
           float tie_weight = weight_k + cumulative_subweight[p] - per_card_subweights[code1][p] -
             per_card_subweights[code2][p];
 
-          /*
-          fprintf(stdout, "p%d %s win:%.4f[cum:%4f %s:%.4f %s:%.4f] "
-              "tie:%.4f[w:%.4f cum:%.4f %s:%.4f %s:%.4f]\n", p, holding_k.str().c_str(),
-              win_weight, cumulative_weight[p],
-              holding_k.getCard1().str().c_str(), per_card_weights[code1][p],
-              holding_k.getCard2().str().c_str(), per_card_weights[code2][p],
-              tie_weight, weight_k, cumulative_subweight[p],
-              holding_k.getCard1().str().c_str(), per_card_subweights[code1][p],
-              holding_k.getCard2().str().c_str(), per_card_subweights[code2][p]);
-              */
-
-          // will divide by denominator later
+          // this is just numerator, will divide by denominator later
           unit_k.setEquity(1-p, win_weight + 0.5*tie_weight);
         }
       }
@@ -122,13 +115,11 @@ namespace rangecalc {
       for (int p=0; p<2; ++p) {
         float weight = unit.getWeight(p);
         float numerator = unit.getEquity(p);
+        
+        // inclusion-exclusion combinatorics:
         float denominator = weight + cumulative_weight[1-p] - per_card_weights[code1][1-p] -
           per_card_weights[code2][1-p];
 
-        /*
-        fprintf(stdout, "p%d %s %.4f/%.4f -> %.4f\n", p, holding.str().c_str(), 
-            numerator, denominator, numerator/denominator);
-            */
         unit.setEquity(p, numerator / denominator);
       }
     }
