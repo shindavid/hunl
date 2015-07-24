@@ -1,5 +1,7 @@
 // Included by JointHoldingDistribution.h
 
+#include "util/Arithmetic.h"
+
 template<typename Unit>
 JointHoldingDistribution<Unit>::JointHoldingDistribution() {
   this->_size = 0;
@@ -22,12 +24,12 @@ bool JointHoldingDistribution<Unit>::_validate() const
   float total_weight[2] = {};
   for (int i=0; i<_size; ++i) {
     for (int j=0; j<2; ++j) {
-      total_weight[j] += units[i].getWeight(j);
+      total_weight[j] += _units[i].getWeight(j);
     }
   }
 
-  return approximately_equal(total_weight[0], _total_weight) && 
-    approximately_equal(total_weight[1], _total_weight);
+  return approximately_equal(total_weight[0], _total_weight[0]) && 
+    approximately_equal(total_weight[1], _total_weight[1]);
 }
   
 template<typename Unit>
@@ -50,7 +52,7 @@ void JointHoldingDistribution<Unit>::remove(ps::Card card) {
   _validate();
 }
 
-template<typename Unit, class Compare>
+template<typename Unit> template<class Compare>
 void JointHoldingDistribution<Unit>::sort(Compare comp) {
   std::sort(_units, &_units[_size], comp);
 }

@@ -10,7 +10,7 @@ namespace ps = pokerstove;
  */
 class Holding {
 private:
-  const ps::CardSet _cards;
+  ps::CardSet _cards;
 
   int _code1() const;
   int _code2() const;
@@ -27,6 +27,7 @@ public:
 
   bool operator==(const Holding& h) const;
   uint64_t hash() const;
+  std::string str() const;
 };
 
 #include "HoldingINLINES.cpp"

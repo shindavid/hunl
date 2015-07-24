@@ -22,3 +22,11 @@ uint64_t Holding::hash() const {
   int m = _code2();
   return m*(m-1)/2 + n;
 }
+
+std::string Holding::str() const {
+  ps::Card c[2] = {getCard1(), getCard2()};
+
+  int first = c[0].rank() > c[1].rank() ? 0 : 1;
+  int second = 1-first;
+  return c[first].str() + c[second].str();
+}

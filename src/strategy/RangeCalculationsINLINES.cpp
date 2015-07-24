@@ -1,3 +1,4 @@
+#include "util/select.hpp"
 
 void RankedJointWeightedHolding::init(Holding holding, float weight1, float weight2) {
   _holding = holding;
@@ -30,12 +31,12 @@ namespace rangecalc {
         for (uint32_t j=0; j<N; ++j) {
           const RankedJointWeightedHolding& holding_j = dist[j];
           ps::PokerEvaluation eval_j = holding_j.getEval();
-          bool intersects = holding_i.intersects(holding_j);
+          bool intersects = holding_i.getHolding().intersects(holding_j.getHolding());
           
           float weight = holding_j.getWeight(1-p);
 
           numerator += (intersects?0:1) * weight * 
-            branchless::select(eval_i>eval_j, 1, branchless::select(eval_i==eval_j, 0.5, 0));
+            branchless::select(eval_i>eval_j, 1.0, branchless::select(eval_i==eval_j, 0.5, 0.0));
           
           denominator += (intersects?0:1) * weight;
         }

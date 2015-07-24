@@ -58,6 +58,6 @@ public:
   template <class Compare> void sort(Compare comp);
 };
 
-#include "HoldingDistributionINLINES.cpp"
+#include "JointHoldingDistributionINLINES.cpp"
 
 

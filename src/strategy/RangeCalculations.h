@@ -26,11 +26,11 @@ public:
   void setEval(ps::PokerEvaluation eval);
 };
 
-struct RankCompare {
+struct RankCompare_t {
   bool operator() (const RankedJointWeightedHolding& r1, const RankedJointWeightedHolding& r2) {
     return r1.getEval() < r2.getEval();
   }
-};
+} RankCompare;
 
 typedef JointHoldingDistribution<RankedJointWeightedHolding> RankedJointHoldingDistribution;
 
