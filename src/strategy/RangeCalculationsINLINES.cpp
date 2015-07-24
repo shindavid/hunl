@@ -48,7 +48,75 @@ namespace rangecalc {
 
   void computeEquities_smart(RankedJointHoldingDistribution& dist) {
     dist.sort(RankCompare);
-    // TODO
+
+    uint32_t N = dist.size();
+    float per_card_weights[52][2] = {};
+    float cumulative_weight[2] = {};
+
+    uint32_t i=0;
+    while (i<N) {
+      const RankedJointWeightedHolding& unit_i = dist[i];
+      ps::PokerEvaluation eval_i = unit_i.getEval();
+      
+      float per_card_subweights[52][2] = {};
+      float cumulative_subweight[2] = {};
+     
+      // find tying hands
+      uint32_t j=i;
+      for (; j<N && dist[j].getEval()==eval_i; ++j) {
+        const RankedJointWeightedHolding& unit_j = dist[j];
+        Holding holding_j = unit_j.getHolding();
+        for (int p=0; p<2; ++p) {
+          double weight_j = unit_j.getWeight(p);
+          cumulative_subweight += weight_j;
+          per_card_subweights[holding_j.getCard1().code()][p] += weight_j;
+          per_card_subweights[holding_j.getCard2().code()][p] += weight_j;
+        }
+      }
+
+      for (uint32_t k=i; k<j; ++k) {
+        RankedJointWeightedHolding& unit_k = dist[k];
+        Holding holding_k = unit_k.getHolding();
+        int code1 = holding_k.getCard1().code();
+        int code2 = holding_k.getCard2().code();
+        for (int p=0; p<2; ++p) {
+          double weight_k = unit_k.getWeight(p);
+
+          double win_weight = cumulative_weight[p] - per_card_weights[code1][p] -
+            per_card_weights[code2][p];
+          double tie_weight = weight_k + cumulative_subweight[p] - per_card_subweights[code1][p] -
+            per_card_subweights[code2][p];
+
+          // will divide by denominator later
+          unit_k.setEquity(1-p, win_weight + 0.5*tie_weight);
+        }
+      }
+
+      i = j;
+      
+      cumulative_weight[0] += cumulative_subweight[0];
+      cumulative_weight[1] += cumulative_subweight[1];
+      // auto-vectorization ftw?
+      for (int k=0; k<52; ++k) {
+        per_card_weights[k][0] += per_card_subweights[k][0];
+        per_card_weights[k][1] += per_card_subweights[k][1];
+      }
+    }
+  }
+
+  for (i=0; i<N; ++i) {
+    RankedJointWeightedHolding& unit = dist[i];
+    Holding holding = unit.getHolding();
+    int code1 = holding.getCard1().code();
+    int code2 = holding.getCard2().code();
+    for (int p=0; p<2; ++p) {
+      float weight = unit.getWeight(p);
+      float numerator = unit.getEquity(p);
+      float denominator = weight + cumulative_weight[1-p] - per_card_weights[code1][1-p] -
+        per_card_weights[code2][1-p];
+
+      unit.setEquity(p, numerator / denominator);
+    }
   }
 }
 
