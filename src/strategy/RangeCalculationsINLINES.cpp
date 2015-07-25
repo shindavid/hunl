@@ -72,7 +72,7 @@ namespace rangecalc {
         int code1 = holding_j.getCard1().code();
         int code2 = holding_j.getCard2().code();
         for (int p=0; p<2; ++p) {
-          float weight_j = unit_j.getWeight(1);
+          float weight_j = unit_j.getWeight(p);
           cumulative_subweight[p] += weight_j;
           per_card_subweights[code1][p] += weight_j;
           per_card_subweights[code2][p] += weight_j;
