@@ -10,6 +10,13 @@ bool approximately_equal(float x, float y) {
 }
 
 /*
+ * returns ceil(x*1.0/n)
+ */
+template<int n> int ceil_div(int x) {
+  return (x+n-1)/n;
+}
+
+/*
  * http://forums.overclockers.co.uk/showthread.php?p=8773984
  */
 float fast_inv_sqrt(float x) {
