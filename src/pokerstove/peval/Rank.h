@@ -15,7 +15,7 @@ namespace pokerstove
  * the fact that certain classes have to be friends to use the more
  * powerfull methods.
  */
-class Rank
+class __attribute__ ((__packed__)) Rank
 {
 public:
     static const unsigned int NUM_RANK = 13;

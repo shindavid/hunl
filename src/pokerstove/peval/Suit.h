@@ -17,7 +17,7 @@ namespace pokerstove
  * of suits is used for determining relative order of suits when
  * needed.
  */
-class Suit
+class __attribute__ ((__packed__)) Suit
 {
 public:
 
