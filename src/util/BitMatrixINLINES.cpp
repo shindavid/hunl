@@ -39,6 +39,11 @@ void BitMatrix::mult(float* vec, float* product) const {
         mask = mask >> 8;
 
         //result = vfmadd231(float_submask, &product[p], result);  // TODO(dshin) - how do i do this?
+
+        // TODO(dshin): remove below slow code after uncommenting working versin of vfma* call above
+        for (int h=0; h<8; ++h) result += float_submask[h]*product[p+h];
+        // end TODO
+
         p += 8;
       }
     }
