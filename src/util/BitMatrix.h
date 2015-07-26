@@ -35,7 +35,7 @@ public:
    *
    * TODO: add support for multiplication with an (_n by k) matrix.
    */
-  float mult(float* vec, float* product) const;
+  void mult(float* vec, float* product) const;
 };
 
 #include "util/BitMatrixFloatTable.cpp"

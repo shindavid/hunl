@@ -26,7 +26,7 @@ void BitMatrix::set(int x, int y, bool b) {
 /*
  * Required: vec is of length _n
  */
-float BitMatrix::mult(float* vec, float* product) const {
+void BitMatrix::mult(float* vec, float* product) const {
   int b = 0;  // index into _bits
   int p = 0;  // index into product
   for (int i=0; i<_m; ++i) {
