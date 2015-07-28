@@ -12,7 +12,7 @@ bool approximately_equal(float x, float y) {
 /*
  * returns ceil(x*1.0/n)
  */
-template<int n> int ceil_div(int x) {
+template<int n> constexpr int ceil_div(int x) {
   return (x+n-1)/n;
 }
 

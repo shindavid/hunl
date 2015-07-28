@@ -1,38 +1,33 @@
 #include <xmmintrin.h>
 
-BitMatrix::BitMatrix(int m, int n) :
-  _m(m), _n(n), _n64(ceil_div<64>(n)), _n8(ceil_div<8>(n))
-{
-  _bits = new uint64_t[m*_n64];
-  memset(_bits, 0, m*_n64*8);
+template<int M, int N>
+bool BitMatrix<M,N>::get(int x, int y) const {
+  assert(x>=0);
+  assert(x<M);
+  assert(y>=0);
+  assert(y<N);
+  return _bits[x][y/64] & (1LL<<(y%64));
 }
 
-bool BitMatrix::get(int x, int y) const {
+template<int M, int N>
+void BitMatrix<M,N>::set(int x, int y, bool b) {
   assert(x>=0);
-  assert(x<_m);
+  assert(x<M);
   assert(y>=0);
-  assert(y<_n);
-  return _bits[x*_n64+y/64] & (1LL<<(y%64));
-}
-
-void BitMatrix::set(int x, int y, bool b) {
-  assert(x>=0);
-  assert(x<_m);
-  assert(y>=0);
-  assert(y<_n);
-  _bits[x*_n64+y/64] |= (b?1LL:0)<<(y%64);
+  assert(y<N);
+  _bits[x][y/64] |= (b?1LL:0)<<(y%64);
 }
 
 /*
  * Required: vec is of length _n
  */
-void BitMatrix::mult(float* vec, float* product) const {
-  int b = 0;  // index into _bits
+template<int M, int N>
+void BitMatrix<M,N>::mult(float* vec, float* product) const {
   int p = 0;  // index into product
-  for (int i=0; i<_m; ++i) {
+  for (int i=0; i<M; ++i) {
     float result = 0.0;
-    for (int j=0; j<_n64; ++j) {
-      uint64_t mask = _bits[b++];
+    for (int j=0; j<sN64; ++j) {
+      uint64_t mask = _bits[i][j];
       for (int k=0; k<8; ++k) {
         uint8_t submask = (uint8_t)mask;
         float* float_submask = sFloatTable[submask];

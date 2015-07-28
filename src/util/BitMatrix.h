@@ -5,26 +5,19 @@
 /*
  * A BitMatrix is a matrix of all 0's and 1's. 
  */
+
+template<int M, int N>
 class BitMatrix {
-private:
-  const int _m;  // # rows
-  const int _n;  // # columns
-  const int _n64;  // # of size-64 boxes needed to fit _n balls
-  const int _n8;  // # of size-8 boxes needed to fit _n balls
-
-  uint64_t* _bits;  // initialized on heap
-
+public:
+  static const int sM = M;
+  static const int sN = N;
+  static const int sN64 = ceil_div<64>(N);
+  static const int sN8 = ceil_div<8>(N);
   static float sFloatTable[256][8];  // supports mult()
 
+  uint64_t _bits[M][sN64];
+
 public:
-  /*
-   * Initializes all bits to 0.
-   */
-  BitMatrix(int m, int n);
-
-  int getM() const;
-  int getN() const;
-
   bool get(int x, int y) const;
   void set(int x, int y, bool b);
 
