@@ -126,5 +126,38 @@ namespace rangecalc {
       }
     }
   }
+
+  void computeRiverEquityMatrix(RiverEquityMatrix& M, const HoldingIndexing& indexing,
+      const HoldingMap<ps::PokerEvaluation>& evals)
+  {
+    int N = indexing.size();
+
+    HoldingMap<Holding> holdings(N);
+    for (int i=0; i<N; ++i) holdings[i] = indexing[i].toHolding();
+
+    for (int i=0; i<N; ++i) {
+      Holding holding_i = holdings[i];
+      int j=0;
+      for (int j64=0; j<N; ++j64) {
+        uint64_t win_bits = 0LL;
+        uint64_t tie_bits = 0LL;
+        uint64_t denom_bits = 0LL;
+        for (int jd=0; jd<64; ++jd) {
+          Holding holding_j = holdings[j++];
+          bool intersects = holding_i.intersects(holding_j);
+          bool wins = evals[i]>evals[j];
+          bool ties = evals[i]==evals[j];
+
+          win_bits |= ((!intersects&wins) ? 1 : 0) << jd;
+          tie_bits |= ((!intersects&ties) ? 1 : 0) << jd;
+          denom_bits |= ((!intersects) ? 1 : 0) << jd;
+        }
+
+        M.set_win_block(i, j64, win_bits);
+        M.set_tie_block(i, j64, tie_bits);
+        M.set_denom_block(i, j64, denom_bits);
+      }
+    }
+  }
 }
 

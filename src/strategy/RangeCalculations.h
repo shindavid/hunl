@@ -1,4 +1,6 @@
 #include "strategy/JointHoldingDistribution.h"
+#include "strategy/Range.h"
+#include "strategy/RiverEquityMatrix.h"
 
 /*
  * Implements AbstractJointWeightedHolding
@@ -40,6 +42,8 @@ namespace rangecalc {
    */
   void computeEquities_naive(RankedJointHoldingDistribution& dist);
   void computeEquities_smart(RankedJointHoldingDistribution& dist);
+  void computeRiverEquityMatrix(RiverEquityMatrix& M, const HoldingIndexing& indexing,
+      const HoldingMap<ps::PokerEvaluation>& evals);
 }
 
 #include "strategy/RangeCalculationsINLINES.cpp"

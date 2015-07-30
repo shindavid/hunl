@@ -28,6 +28,11 @@ public:
   bool operator==(const Holding& h) const;
   uint64_t hash() const;
   std::string str() const;
+
+  static const int sNumHoldings = 1326;  // 52-choose-2
+  static const int sNumFlopHoldings = 1176;  // 49-choose-2
+  static const int sNumTurnHoldings = 1128;  // 48-choose-2
+  static const int sNumRiverHoldings = 1081;  // 47-choose-2
 };
 
 #include "HoldingINLINES.cpp"
