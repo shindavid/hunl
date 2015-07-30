@@ -1,3 +1,4 @@
+#include "util/BitMatrixFloatTable.h"
 #include <xmmintrin.h>
 
 template<int M, int N>
@@ -18,19 +19,25 @@ void BitMatrix<M,N>::set(int x, int y, bool b) {
   _bits[x][y/64] |= (b?1LL:0)<<(y%64);
 }
 
-/*
- * Required: vec is of length _n
- */
 template<int M, int N>
-void BitMatrix<M,N>::mult(float* vec, float* product) const {
-  int p = 0;  // index into product
+void BitMatrix<M,N>::set_block(int x, int yb, int64_t block) {
+  assert(x>=0);
+  assert(x<M);
+  assert(yb>=0);
+  assert(yb<sN64);
+  _bits[x][yb] = block;
+}
+
+template<int M, int N>
+void BitMatrix<M,N>::mult(const float* vec, float* product) const {
   for (int i=0; i<M; ++i) {
     float result = 0.0;
+    int p = 0;  // index into product
     for (int j=0; j<sN64; ++j) {
       uint64_t mask = _bits[i][j];
       for (int k=0; k<8; ++k) {
         uint8_t submask = (uint8_t)mask;
-        float* float_submask = sFloatTable[submask];
+        float* float_submask = bit_matrix::floatTable[submask];
         mask = mask >> 8;
 
         //result = vfmadd231(float_submask, &product[p], result);  // TODO(dshin) - how do i do this?

@@ -13,13 +13,13 @@ public:
   static const int sN = N;
   static const int sN64 = ceil_div<64>(N);
   static const int sN8 = ceil_div<8>(N);
-  static float sFloatTable[256][8];  // supports mult()
 
   uint64_t _bits[M][sN64];
 
 public:
   bool get(int x, int y) const;
   void set(int x, int y, bool b);
+  void set_block(int x, int yb, int64_t block);
 
   /*
    * Required: vec has length _n, product has length _m
@@ -28,9 +28,8 @@ public:
    *
    * TODO: add support for multiplication with an (_n by k) matrix.
    */
-  void mult(float* vec, float* product) const;
+  void mult(const float* vec, float* product) const;
 };
 
-#include "util/BitMatrixFloatTable.cpp"
 #include "util/BitMatrixINLINES.cpp"
 
