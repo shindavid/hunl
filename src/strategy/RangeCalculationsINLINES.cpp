@@ -142,15 +142,17 @@ namespace rangecalc {
         uint64_t win_bits = 0LL;
         uint64_t tie_bits = 0LL;
         uint64_t denom_bits = 0LL;
-        for (int jd=0; jd<64; ++jd) {
-          Holding holding_j = holdings[j++];
+        for (int jd=0; j<N && jd<64; ++jd) {
+          Holding holding_j = holdings[j];
           bool intersects = holding_i.intersects(holding_j);
-          bool wins = evals[i]>evals[j];
-          bool ties = evals[i]==evals[j];
+          bool wins = !intersects && (evals[i]>evals[j]);
+          bool ties = !intersects && (evals[i]==evals[j]);
 
-          win_bits |= ((!intersects&wins) ? 1 : 0) << jd;
-          tie_bits |= ((!intersects&ties) ? 1 : 0) << jd;
-          denom_bits |= ((!intersects) ? 1 : 0) << jd;
+          win_bits |= (wins ? 1LL : 0LL) << jd;
+          tie_bits |= (ties ? 1LL : 0LL) << jd;
+          denom_bits |= ((!intersects) ? 1LL : 0LL) << jd;
+
+          ++j;
         }
 
         M.set_win_block(i, j64, win_bits);

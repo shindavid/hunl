@@ -9,7 +9,11 @@ Holding CompactHolding::toHolding() const {
   ps::CardSet cards;
   cards.insert(ps::Card(xy.first));
   cards.insert(ps::Card(xy.second));
-  return Holding(cards);
+  Holding h = Holding(cards);
+  assert(*this == CompactHolding(h));
+  return h;
 }
 
 uint16_t CompactHolding::code() const { return _code; }
+bool CompactHolding::operator==(const CompactHolding& h) const { return _code==h._code; }
+

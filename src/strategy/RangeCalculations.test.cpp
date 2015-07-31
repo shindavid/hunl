@@ -94,7 +94,7 @@ int main() {
     }
     std::sort(dist3.begin(), dist3.end(), PrintSort);
 
-    fprintf(stdout, "naive  smart  hand\n");
+    fprintf(stdout, "naive    smart    river    hand\n");
     for (uint32_t j=0; j<dist.size(); ++j) {
       const RankedJointWeightedHolding& item = dist[j];
       Holding holding = item.getHolding();
@@ -102,9 +102,9 @@ int main() {
       float smart_equity = dist2[j].getEquity(0);
       float river_equity = dist3[j].getEquity(0);
       assert(approximately_equal(naive_equity, smart_equity));
-      //assert(approximately_equal(naive_equity, river_equity));
-      fprintf(stdout, "%.4f %.4f %.4f %s\n", naive_equity, smart_equity, river_equity,
-          holding.str().c_str());
+      assert(approximately_equal(naive_equity, river_equity));
+      fprintf(stdout, "%.6f %.6f %.6f %s\n", naive_equity, smart_equity, river_equity, 
+          dist[j].getHolding().str().c_str());
     }
   }
   

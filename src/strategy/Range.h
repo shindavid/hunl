@@ -16,6 +16,8 @@ public:
   CompactHolding(Holding holding);
   Holding toHolding() const;
   uint16_t code() const;
+
+  bool operator==(const CompactHolding& h) const;
 };
 static_assert(sizeof(CompactHolding)==2, "CompactHolding should fit in 2 bytes");
 
@@ -56,8 +58,8 @@ public:
 
   int size() const { return _size; }
   
-  const T& operator[](int i) const { return _t[i]; }
-  T& operator[](int i) { return _t[i]; }
+  const T& operator[](int i) const { assert(i<_size); return _t[i]; }
+  T& operator[](int i) { assert(i<_size); return _t[i]; }
   
   template <class Compare> void sort(Compare comp) {
     std::sort(_t, &_t[_size], comp);

@@ -32,7 +32,7 @@ template<int M, int N>
 void BitMatrix<M,N>::mult(const float* vec, float* product) const {
   for (int i=0; i<M; ++i) {
     float result = 0.0;
-    int p = 0;  // index into product
+    int p = 0;  // index into vec
     for (int j=0; j<sN64; ++j) {
       uint64_t mask = _bits[i][j];
       for (int k=0; k<8; ++k) {
@@ -42,8 +42,10 @@ void BitMatrix<M,N>::mult(const float* vec, float* product) const {
 
         //result = vfmadd231(float_submask, &product[p], result);  // TODO(dshin) - how do i do this?
 
-        // TODO(dshin): remove below slow code after uncommenting working versin of vfma* call above
-        for (int h=0; h<8; ++h) result += float_submask[h]*product[p+h];
+        // TODO(dshin): remove below slow code after uncommenting working version of vfma* call above
+        for (int h=0; h<8; ++h) {
+          result += float_submask[h]*vec[p+h];
+        }
         // end TODO
 
         p += 8;
