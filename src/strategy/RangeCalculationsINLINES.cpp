@@ -16,22 +16,23 @@ namespace rangecalc {
     }
   }
 
-  void computeEquities_naive(const RiverRange& range, const RiverEvals& evals,
-      RiverEquities& equities)
+  void computeEquities_naive(RiverComputationMap& map)
   {
     for (int p=0; p<2; ++p) {
       for (size_t i=0; i<RiverRange::sSize; ++i) {
-        Holding holding_i = evals.getHolding(i);
-        ps::PokerEvaluation eval_i = evals.getValue(i);
+        Holding holding_i = map.getHolding(i);
+        RiverComputationUnit& unit_i = map.getValue(i);
+        ps::PokerEvaluation eval_i = unit_i.eval;
 
         float numerator = 0.0;
         float denominator = 0.0;
         for (size_t j=0; j<RiverRange::sSize; ++j) {
-          Holding holding_j = evals.getHolding(j);
-          ps::PokerEvaluation eval_j = evals.getValue(j);
+          Holding holding_j = map.getHolding(j);
+          const RiverComputationUnit& unit_j = map.getValue(j);
+          ps::PokerEvaluation eval_j = unit_j.eval;
           bool intersects = holding_i.intersects(holding_j);
           
-          float weight = range.getValue(j).weight[1-p];
+          float weight = unit_j.weight[1-p];
 
           numerator += (intersects?0:1) * weight * 
             branchless::select(eval_i>eval_j, 1.0, branchless::select(eval_i==eval_j, 0.5, 0.0));
@@ -39,17 +40,14 @@ namespace rangecalc {
           denominator += (intersects?0:1) * weight;
         }
 
-        equities.getValue(i).equity[p] = numerator / denominator;
+        unit_i.equity[p] = numerator / denominator;
       }
     }
   }
 
-  void computeEquities_smart(RiverRange& range, RiverEvals& evals,
-      RiverEquities& equities)
+  void computeEquities_smart(RiverComputationMap& map)
   {
-    evals.sort(RankCompare);
-    evals.reorder(range);
-    evals.reorder(equities);
+    map.sort(RankCompare);
 
     // need per-card weights to do inclusion-exclusion combinatorics
     float per_card_weights[52][2] = {};
@@ -59,7 +57,8 @@ namespace rangecalc {
 
     size_t i=0;
     while (i<N) {
-      ps::PokerEvaluation eval_i = evals.getValue(i);
+      RiverComputationUnit& unit_i = map.getValue(i);
+      ps::PokerEvaluation eval_i = unit_i.eval;
       
       // need per-card weights to do inclusion-exclusion combinatorics
       float per_card_subweights[52][2] = {};
@@ -67,12 +66,13 @@ namespace rangecalc {
      
       // find tying hands, need to find them separately because of 0.5 multiplier
       size_t j=i;
-      for (; j<N && evals.getValue(j)==eval_i; ++j) {
-        Holding holding_j = evals.getHolding(j);
+      for (; j<N && map.getValue(j).eval==eval_i; ++j) {
+        const RiverComputationUnit& unit_j = map.getValue(j);
+        Holding holding_j = map.getHolding(j);
         int code1 = holding_j.getCard1().code();
         int code2 = holding_j.getCard2().code();
         for (int p=0; p<2; ++p) {
-          float weight_j = range.getValue(j).weight[p];
+          float weight_j = unit_j.weight[p];
           cumulative_subweight[p] += weight_j;
           per_card_subweights[code1][p] += weight_j;
           per_card_subweights[code2][p] += weight_j;
@@ -80,11 +80,12 @@ namespace rangecalc {
       }
 
       for (size_t k=i; k<j; ++k) {
-        Holding holding_k = evals.getHolding(k);
+        RiverComputationUnit& unit_k = map.getValue(k);
+        Holding holding_k = map.getHolding(k);
         int code1 = holding_k.getCard1().code();
         int code2 = holding_k.getCard2().code();
         for (int p=0; p<2; ++p) {
-          float weight_k = range.getValue(k).weight[p];
+          float weight_k = unit_k.weight[p];
 
           // inclusion-exclusion combinatorics:
           float win_weight = cumulative_weight[p] - per_card_weights[code1][p] -
@@ -93,7 +94,7 @@ namespace rangecalc {
             per_card_subweights[code2][p];
 
           // this is just numerator, will divide by denominator later
-          equities.getValue(k).equity[1-p] = win_weight + 0.5*tie_weight;
+          unit_k.equity[1-p] = win_weight + 0.5*tie_weight;
         }
       }
 
@@ -109,20 +110,19 @@ namespace rangecalc {
     }
 
     for (i=0; i<N; ++i) {
-      Holding holding = evals.getHolding(i);
+      RiverComputationUnit& unit = map.getValue(i);
+      Holding holding = map.getHolding(i);
       int code1 = holding.getCard1().code();
       int code2 = holding.getCard2().code();
       for (int p=0; p<2; ++p) {
-        float weight = range.getValue(i).weight[1-p];
-        float numerator = equities.getValue(i).equity[p];
+        float weight = unit.weight[1-p];
+        float numerator = unit.equity[p];
         
         // inclusion-exclusion combinatorics:
         float denominator = weight + cumulative_weight[1-p] - per_card_weights[code1][1-p] -
           per_card_weights[code2][1-p];
 
-        equities.getValue(i).equity[p] = numerator / denominator;
-        //fprintf(stdout, "DEBUG %s[%d] = %g / %g = %.6f\n", holding.str().c_str(), p, numerator,
-        //    denominator, equities.getValue(i).equity[p]);
+        unit.equity[p] = numerator / denominator;
       }
     }
   }

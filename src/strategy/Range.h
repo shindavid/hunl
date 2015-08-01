@@ -76,7 +76,13 @@ typedef FlopHoldingMap<JointEquities> FlopEquities;
 typedef TurnHoldingMap<JointEquities> TurnEquities;
 typedef RiverHoldingMap<JointEquities> RiverEquities;
 
-typedef RiverHoldingMap<ps::PokerEvaluation> RiverEvals;
+struct RiverComputationUnit {
+  float weight[2];
+  float equity[2];
+  ps::PokerEvaluation eval;
+};
+
+typedef RiverHoldingMap<RiverComputationUnit> RiverComputationMap;
 
 #include "strategy/RangeINLINES.cpp"
 

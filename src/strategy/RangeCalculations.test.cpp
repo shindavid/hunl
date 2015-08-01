@@ -28,22 +28,27 @@ int main() {
     RiverRange range;
     preflop_range.remove(board.getCards(), range);
 
-    RiverEvals evals(range);
-    RiverEquities equities_naive(range);
-    RiverEquities equities_smart(range);
+    RiverComputationMap river_comp_naive(range);
+    RiverComputationMap river_comp_smart(range);
 
     Clock::time_point t0 = Clock::now();
 
     for (size_t j=0; j<RiverRange::sSize; ++j) {
-      ps::PokerEvaluation eval = evaluator.evaluateHand(evals.getHolding(j).getCardSet(),
+      ps::PokerEvaluation eval = evaluator.evaluateHand(range.getHolding(j).getCardSet(),
           board.getCards()).high();
-      evals.setValue(j, eval);
+
+      RiverComputationUnit unit;
+      unit.weight[0] = 1.0;
+      unit.weight[1] = 1.0;
+      unit.eval = eval;
+      river_comp_naive.setValue(j, unit);
+      river_comp_smart.setValue(j, unit);
     }
     
     Clock::time_point t1 = Clock::now();
-    rangecalc::computeEquities_naive(range, evals, equities_naive);
+    rangecalc::computeEquities_naive(river_comp_naive);
     Clock::time_point t2 = Clock::now();
-    rangecalc::computeEquities_smart(range, evals, equities_smart);
+    rangecalc::computeEquities_smart(river_comp_smart);
     Clock::time_point t3 = Clock::now();
     /*
     rangecalc::computeRiverEquityMatrix(M, indexing, evals);
@@ -71,48 +76,18 @@ int main() {
         board.getCard(0).str().c_str(), board.getCard(1).str().c_str(), board.getCard(2).str().c_str(),
         board.getCard(3).str().c_str(), board.getCard(4).str().c_str());
 
-    int permutation[RiverRange::sSize];
-    int permutation2[RiverRange::sSize];
-    for (int j=0; j<RiverRange::sSize; ++j) {
-      permutation[j] = j;
-      permutation2[j] = j;
-    }
-    std::sort(permutation, &permutation[RiverRange::sSize], 
-        [&](const int& a, const int& b) {
-        float eqa = equities_naive.getValue(a).equity[0];
-        float eqb = equities_naive.getValue(b).equity[0];
-        ps::PokerEvaluation evala = evals.getValue(a);
-        ps::PokerEvaluation evalb = evals.getValue(b);
-        return eqa>eqb || (eqa==eqb && evala>evalb);
-        });
-    std::sort(permutation2, &permutation2[RiverRange::sSize], 
-        [&](const int& a, const int& b) {
-        float eqa = equities_smart.getValue(a).equity[0];
-        float eqb = equities_smart.getValue(b).equity[0];
-        ps::PokerEvaluation evala = evals.getValue(a);
-        ps::PokerEvaluation evalb = evals.getValue(b);
-        return eqa>eqb || (eqa==eqb && evala>evalb);
-        });
+    river_comp_naive.sort(PrintCompare);
+    river_comp_smart.sort(PrintCompare);
 
-    RiverEquities equities_naive_sorted;
-    RiverEquities equities_smart_sorted;
+    fprintf(stdout, "naive        | smart\n");
     for (int j=0; j<RiverRange::sSize; ++j) {
-      int pj = permutation[j];
-      equities_naive_sorted.setHolding(j, equities_naive.getHolding(pj));
-      equities_naive_sorted.setValue(j, equities_naive.getValue(pj));
-      
-      int pj2 = permutation2[j];
-      equities_smart_sorted.setHolding(j, equities_smart.getHolding(pj2));
-      equities_smart_sorted.setValue(j, equities_smart.getValue(pj2));
-    }
-
-    fprintf(stdout, "naive    smart    hand\n");
-    for (int j=0; j<RiverRange::sSize; ++j) {
-      Holding holding = equities_naive_sorted.getHolding(j);
-      float naive_equity = equities_naive_sorted.getValue(j).equity[0];
-      float smart_equity = equities_smart_sorted.getValue(j).equity[0];
+      Holding holding_naive = river_comp_naive.getHolding(j);
+      Holding holding_smart = river_comp_smart.getHolding(j);
+      float naive_equity = river_comp_naive.getValue(j).equity[0];
+      float smart_equity = river_comp_smart.getValue(j).equity[0];
       assert(approximately_equal(naive_equity, smart_equity));
-      fprintf(stdout, "%.6f %.6f %s\n", naive_equity, smart_equity, holding.str().c_str());
+      fprintf(stdout, "%.6f %s | %.6f %s\n", naive_equity, holding_naive.str().c_str(), smart_equity,
+          holding_smart.str().c_str());
     }
   }
   

@@ -3,8 +3,19 @@
 
 struct RankCompare_t {
   template<typename T>
-  bool operator() (const T& t1, const T& t2) { return t1.t < t2.t; }
+  bool operator() (const T& t1, const T& t2) { return t1.t.eval < t2.t.eval; }
 } RankCompare;
+
+struct PrintCompare_t {
+  template<typename T>
+  bool operator() (const T& t1, const T& t2) {
+    float eq1 = t1.t.equity[0];
+    float eq2 = t2.t.equity[0];
+    ps::PokerEvaluation eval1 = t1.t.eval;
+    ps::PokerEvaluation eval2 = t2.t.eval;
+    return eq1>eq2 || (eq1==eq2 && eval1>eval2);
+  }
+} PrintCompare;
 
 namespace rangecalc {
   void init_uniform(PreflopRange& range);
@@ -12,12 +23,8 @@ namespace rangecalc {
   /*
    * Sets equity values for each item in dist.
    */
-  void computeEquities_naive(const RiverRange& range, const RiverEvals& evals,
-      RiverEquities& equities);
-  void computeEquities_smart(RiverRange& range, RiverEvals& evals,
-      RiverEquities& equities);
-  /*void computeRiverEquityMatrix(RiverEquityMatrix& M, const HoldingIndexing& indexing,
-      const HoldingMap<ps::PokerEvaluation>& evals);*/
+  void computeEquities_naive(RiverComputationMap& map);
+  void computeEquities_smart(RiverComputationMap& map);
 }
 
 #include "strategy/RangeCalculationsINLINES.cpp"
