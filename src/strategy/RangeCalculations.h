@@ -1,49 +1,23 @@
 #include "strategy/JointHoldingDistribution.h"
 #include "strategy/Range.h"
-#include "strategy/RiverEquityMatrix.h"
-
-/*
- * Implements AbstractJointWeightedHolding
- */
-class RankedJointWeightedHolding {
-private:
-  Holding _holding;
-  ps::PokerEvaluation _eval;
-  float _weight[2];
-  float _equity[2];
-
-public:
-  void init(Holding holding, float weight1, float weight2);
-
-  Holding getHolding() const;
-  void setHolding(Holding holding);
-
-  float getWeight(int index) const;
-  void setWeight(int index, float weight);
-
-  float getEquity(int index) const;
-  void setEquity(int index, float equity);
-  
-  ps::PokerEvaluation getEval() const;
-  void setEval(ps::PokerEvaluation eval);
-};
 
 struct RankCompare_t {
-  bool operator() (const RankedJointWeightedHolding& r1, const RankedJointWeightedHolding& r2) {
-    return r1.getEval() < r2.getEval();
-  }
+  template<typename T>
+  bool operator() (const T& t1, const T& t2) { return t1.t < t2.t; }
 } RankCompare;
 
-typedef JointHoldingDistribution<RankedJointWeightedHolding> RankedJointHoldingDistribution;
-
 namespace rangecalc {
+  void init_uniform(PreflopRange& range);
+
   /*
    * Sets equity values for each item in dist.
    */
-  void computeEquities_naive(RankedJointHoldingDistribution& dist);
-  void computeEquities_smart(RankedJointHoldingDistribution& dist);
-  void computeRiverEquityMatrix(RiverEquityMatrix& M, const HoldingIndexing& indexing,
-      const HoldingMap<ps::PokerEvaluation>& evals);
+  void computeEquities_naive(const RiverRange& range, const RiverEvals& evals,
+      RiverEquities& equities);
+  void computeEquities_smart(RiverRange& range, RiverEvals& evals,
+      RiverEquities& equities);
+  /*void computeRiverEquityMatrix(RiverEquityMatrix& M, const HoldingIndexing& indexing,
+      const HoldingMap<ps::PokerEvaluation>& evals);*/
 }
 
 #include "strategy/RangeCalculationsINLINES.cpp"

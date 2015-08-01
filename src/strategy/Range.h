@@ -1,75 +1,82 @@
 #pragma once
 
 #include "engine/Holding.h"
-#include "util/BitMatrix.h"
 
 /*
- * A compact representation of a Holding as a single uint16_t.
+ * A HoldingMap is a map with Holding's as keys. It does not support lookup's.
  */
-class __attribute__ ((__packed__)) CompactHolding {
+template <size_t tSize, typename T> class HoldingMap {
 private:
-  uint16_t _code;
+  struct unit_t {
+    Holding holding;
+    T t;
+  };
+
+  unit_t _units[tSize];
 
 public:
-  CompactHolding() {}
-  CompactHolding(uint16_t code);
-  CompactHolding(Holding holding);
-  Holding toHolding() const;
-  uint16_t code() const;
+  static const size_t sSize = tSize;
 
-  bool operator==(const CompactHolding& h) const;
-};
-static_assert(sizeof(CompactHolding)==2, "CompactHolding should fit in 2 bytes");
+  HoldingMap() {}
+  /*
+   * Sets keys to be in same order as <map>. Values are not written.
+   */
+  template<typename T2> HoldingMap(const HoldingMap<tSize,T2>& map) { map.relabel(*this); }
 
-/*
- * A HoldingIndexing is an ordering of a subset of the universe of possible Holding's. This is to be
- * used in conjunction with HoldingMap.
- *
- * To illustrate, a standard std::map would be used like this:
- *
- * Holding holding;
- * std::map<Holding, T> holding_map;
- * T t = holding_map[holding];
- *
- * A HoldingIndexing + HoldingMap would be used instead like this:
- *
- * HoldingIndexing indexing;
- * HoldingMap<T> holding_map;
- * Holding holding = indexing[0];
- * T t = holding_map[0];
- *
- * Note that direct look-ups are not supported. This is because we don't need it for any of the 
- * algorithms.
- *
- * Q: Why not keep HoldingIndexing as part of HoldingMap? 
- * A: The same indexing can be shared by multiple objects.
- */
-
-/*
- * See comments for HoldingIndexing.
- */
-template <typename T> class HoldingMap {
-private:
-  T _t[Holding::sNumHoldings];
-  const int _size;  // I don't like how size is kept on both the HoldingIndexing and the HoldingMap...
-
-public:
-  HoldingMap(int size) : _size(size) {}
-
-  int size() const { return _size; }
+  unit_t& get(int i) { return _units[i]; }
+  const unit_t& get(int i) const { return _units[i]; }
   
-  const T& operator[](int i) const { assert(i<_size); return _t[i]; }
-  T& operator[](int i) { assert(i<_size); return _t[i]; }
+  Holding getHolding(int i) const { return _units[i].holding; }
+  void setHolding(int i, Holding h) { _units[i].holding = h; }
   
-  template <class Compare> void sort(Compare comp) {
-    std::sort(_t, &_t[_size], comp);
-  }
+  const T& getValue(int i) const { return _units[i].t; }
+  T& getValue(int i) { return _units[i].t; }
+  void setValue(int i, const T& t) { _units[i].t = t; }
+  
+  template <class Compare> void sort(Compare comp) { std::sort(_units, &_units[tSize], comp); }
 
-  const T* getArray() const { return _t; }
-  T* getArray() { return _t; }
+  /*
+   * Rewrites <map> to have its Holding's in the same order as this. The T values of <map> are
+   * set to garbage.
+   */
+  template<typename T2> void relabel(HoldingMap<tSize,T2>& map) const;
+
+  /*
+   * Rewrites <map> to have its Holding's in the same order as this. The T values of <map> are
+   * preserved. 
+   */
+  template<typename T2> void reorder(HoldingMap<tSize,T2>& map) const;
+
+  /*
+   * Removes all Holding's from this that intersect <cards>, storing the result in <map>.
+   * Preserves T values. It is the caller's responsibility to ensure that <map> is declared as the
+   * right size.
+   */
+  template<size_t tSize2> void remove(ps::CardSet cards, HoldingMap<tSize2,T>& map) const;
 };
 
-typedef HoldingMap<CompactHolding> HoldingIndexing;
+template <typename T> using PreflopHoldingMap = HoldingMap<Holding::sNumHoldings, T>;
+template <typename T> using FlopHoldingMap = HoldingMap<Holding::sNumFlopHoldings, T>;
+template <typename T> using TurnHoldingMap = HoldingMap<Holding::sNumTurnHoldings, T>;
+template <typename T> using RiverHoldingMap = HoldingMap<Holding::sNumRiverHoldings, T>;
+
+struct JointWeights {
+  float weight[2];
+};
+typedef PreflopHoldingMap<JointWeights> PreflopRange;
+typedef FlopHoldingMap<JointWeights> FlopRange;
+typedef TurnHoldingMap<JointWeights> TurnRange;
+typedef RiverHoldingMap<JointWeights> RiverRange;
+
+struct JointEquities {
+  float equity[2];
+};
+typedef PreflopHoldingMap<JointEquities> PreflopEquities;
+typedef FlopHoldingMap<JointEquities> FlopEquities;
+typedef TurnHoldingMap<JointEquities> TurnEquities;
+typedef RiverHoldingMap<JointEquities> RiverEquities;
+
+typedef RiverHoldingMap<ps::PokerEvaluation> RiverEvals;
 
 #include "strategy/RangeINLINES.cpp"
 

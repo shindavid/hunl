@@ -1,39 +1,37 @@
 #include "util/select.hpp"
 
-void RankedJointWeightedHolding::init(Holding holding, float weight1, float weight2) {
-  _holding = holding;
-  _weight[0] = weight1;
-  _weight[1] = weight2;
-}
-
-Holding RankedJointWeightedHolding::getHolding() const { return _holding; }
-void RankedJointWeightedHolding::setHolding(Holding holding) { _holding = holding; }
-
-float RankedJointWeightedHolding::getWeight(int index) const { return _weight[index]; }
-void RankedJointWeightedHolding::setWeight(int index, float weight) { _weight[index] = weight; }
-
-float RankedJointWeightedHolding::getEquity(int index) const { return _equity[index]; }
-void RankedJointWeightedHolding::setEquity(int index, float equity) { _equity[index] = equity; }
-
-ps::PokerEvaluation RankedJointWeightedHolding::getEval() const { return _eval; }
-void RankedJointWeightedHolding::setEval(ps::PokerEvaluation eval) { _eval = eval; }
-
 namespace rangecalc {
-  void computeEquities_naive(RankedJointHoldingDistribution& dist) {
-    uint32_t N = dist.size();
+  void init_uniform(PreflopRange& range) {
+    int hi = 0;
+    for (int ci=0; ci<52; ++ci) {
+      for (int cj=ci+1; cj<52; ++cj) {
+        ps::CardSet cset;
+        cset.insert(ps::Card(ci));
+        cset.insert(ps::Card(cj));
+        range.setHolding(hi, Holding(cset));
+        range.getValue(hi).weight[0] = 1.0;
+        range.getValue(hi).weight[1] = 1.0;
+        ++hi;
+      }
+    }
+  }
+
+  void computeEquities_naive(const RiverRange& range, const RiverEvals& evals,
+      RiverEquities& equities)
+  {
     for (int p=0; p<2; ++p) {
-      for (uint32_t i=0; i<N; ++i) {
-        RankedJointWeightedHolding& holding_i = dist[i];
-        ps::PokerEvaluation eval_i = holding_i.getEval();
+      for (size_t i=0; i<RiverRange::sSize; ++i) {
+        Holding holding_i = evals.getHolding(i);
+        ps::PokerEvaluation eval_i = evals.getValue(i);
 
         float numerator = 0.0;
         float denominator = 0.0;
-        for (uint32_t j=0; j<N; ++j) {
-          const RankedJointWeightedHolding& holding_j = dist[j];
-          ps::PokerEvaluation eval_j = holding_j.getEval();
-          bool intersects = holding_i.getHolding().intersects(holding_j.getHolding());
+        for (size_t j=0; j<RiverRange::sSize; ++j) {
+          Holding holding_j = evals.getHolding(j);
+          ps::PokerEvaluation eval_j = evals.getValue(j);
+          bool intersects = holding_i.intersects(holding_j);
           
-          float weight = holding_j.getWeight(1-p);
+          float weight = range.getValue(j).weight[1-p];
 
           numerator += (intersects?0:1) * weight * 
             branchless::select(eval_i>eval_j, 1.0, branchless::select(eval_i==eval_j, 0.5, 0.0));
@@ -41,51 +39,52 @@ namespace rangecalc {
           denominator += (intersects?0:1) * weight;
         }
 
-        holding_i.setEquity(p, numerator / denominator);
+        equities.getValue(i).equity[p] = numerator / denominator;
       }
     }
   }
 
-  void computeEquities_smart(RankedJointHoldingDistribution& dist) {
-    dist.sort(RankCompare);
-
-    uint32_t N = dist.size();
+  void computeEquities_smart(RiverRange& range, RiverEvals& evals,
+      RiverEquities& equities)
+  {
+    evals.sort(RankCompare);
+    evals.reorder(range);
+    evals.reorder(equities);
 
     // need per-card weights to do inclusion-exclusion combinatorics
     float per_card_weights[52][2] = {};
     float cumulative_weight[2] = {};
 
-    uint32_t i=0;
+    size_t N = RiverRange::sSize;
+
+    size_t i=0;
     while (i<N) {
-      const RankedJointWeightedHolding& unit_i = dist[i];
-      ps::PokerEvaluation eval_i = unit_i.getEval();
+      ps::PokerEvaluation eval_i = evals.getValue(i);
       
       // need per-card weights to do inclusion-exclusion combinatorics
       float per_card_subweights[52][2] = {};
       float cumulative_subweight[2] = {};
      
       // find tying hands, need to find them separately because of 0.5 multiplier
-      uint32_t j=i;
-      for (; j<N && dist[j].getEval()==eval_i; ++j) {
-        const RankedJointWeightedHolding& unit_j = dist[j];
-        Holding holding_j = unit_j.getHolding();
+      size_t j=i;
+      for (; j<N && evals.getValue(j)==eval_i; ++j) {
+        Holding holding_j = evals.getHolding(j);
         int code1 = holding_j.getCard1().code();
         int code2 = holding_j.getCard2().code();
         for (int p=0; p<2; ++p) {
-          float weight_j = unit_j.getWeight(p);
+          float weight_j = range.getValue(j).weight[p];
           cumulative_subweight[p] += weight_j;
           per_card_subweights[code1][p] += weight_j;
           per_card_subweights[code2][p] += weight_j;
         }
       }
 
-      for (uint32_t k=i; k<j; ++k) {
-        RankedJointWeightedHolding& unit_k = dist[k];
-        Holding holding_k = unit_k.getHolding();
+      for (size_t k=i; k<j; ++k) {
+        Holding holding_k = evals.getHolding(k);
         int code1 = holding_k.getCard1().code();
         int code2 = holding_k.getCard2().code();
         for (int p=0; p<2; ++p) {
-          float weight_k = unit_k.getWeight(p);
+          float weight_k = range.getValue(k).weight[p];
 
           // inclusion-exclusion combinatorics:
           float win_weight = cumulative_weight[p] - per_card_weights[code1][p] -
@@ -94,7 +93,7 @@ namespace rangecalc {
             per_card_subweights[code2][p];
 
           // this is just numerator, will divide by denominator later
-          unit_k.setEquity(1-p, win_weight + 0.5*tie_weight);
+          equities.getValue(k).equity[1-p] = win_weight + 0.5*tie_weight;
         }
       }
 
@@ -110,23 +109,25 @@ namespace rangecalc {
     }
 
     for (i=0; i<N; ++i) {
-      RankedJointWeightedHolding& unit = dist[i];
-      Holding holding = unit.getHolding();
+      Holding holding = evals.getHolding(i);
       int code1 = holding.getCard1().code();
       int code2 = holding.getCard2().code();
       for (int p=0; p<2; ++p) {
-        float weight = unit.getWeight(p);
-        float numerator = unit.getEquity(p);
+        float weight = range.getValue(i).weight[1-p];
+        float numerator = equities.getValue(i).equity[p];
         
         // inclusion-exclusion combinatorics:
         float denominator = weight + cumulative_weight[1-p] - per_card_weights[code1][1-p] -
           per_card_weights[code2][1-p];
 
-        unit.setEquity(p, numerator / denominator);
+        equities.getValue(i).equity[p] = numerator / denominator;
+        //fprintf(stdout, "DEBUG %s[%d] = %g / %g = %.6f\n", holding.str().c_str(), p, numerator,
+        //    denominator, equities.getValue(i).equity[p]);
       }
     }
   }
 
+  /*
   void computeRiverEquityMatrix(RiverEquityMatrix& M, const HoldingIndexing& indexing,
       const HoldingMap<ps::PokerEvaluation>& evals)
   {
@@ -161,5 +162,6 @@ namespace rangecalc {
       }
     }
   }
+  */
 }
 
