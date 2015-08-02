@@ -17,6 +17,7 @@ public:
   ps::CardSet getCards() const;
   ps::Card getCard(int i) const;
   unsigned getSize() const;
+  bool contains(ps::Card card) const;
 
   bool operator==(const Board& board) const;
 };

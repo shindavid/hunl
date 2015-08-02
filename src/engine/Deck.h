@@ -49,6 +49,8 @@ public:
         return card;
     }
 
+    ps::Card peek(int i) const { return _deck[i]; }
+
     void shuffle ()
     {
         std::random_shuffle(_deck.begin(), _deck.end());

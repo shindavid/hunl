@@ -18,8 +18,12 @@ public:
   static const size_t sSize = tSize;
 
   HoldingMap() {}
+ 
+  // Copy constructor
+  HoldingMap(const HoldingMap<tSize,T>& map) { _units = map._units; }
+
   /*
-   * Sets keys to be in same order as <map>. Values are not written.
+   * Sets keys to be in same order as <map>. Values are set to garbage.
    */
   template<typename T2> HoldingMap(const HoldingMap<tSize,T2>& map) { map.relabel(*this); }
 
@@ -83,6 +87,19 @@ struct RiverComputationUnit {
 };
 
 typedef RiverHoldingMap<RiverComputationUnit> RiverComputationMap;
+typedef RiverHoldingMap<ps::PokerEvaluation> RiverEvalMap;
+
+struct TurnEvalArray {
+  ps::PokerEvaluation evals[52];
+};
+
+struct ComputationUnit {
+  float weight[2];
+  float equity[2];
+};
+
+typedef TurnHoldingMap<ComputationUnit> TurnComputationMap;
+typedef TurnHoldingMap<TurnEvalArray> TurnEvalMap;
 
 #include "strategy/RangeINLINES.cpp"
 

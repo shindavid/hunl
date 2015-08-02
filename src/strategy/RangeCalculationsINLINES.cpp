@@ -15,9 +15,42 @@ namespace rangecalc {
       }
     }
   }
-
-  void computeEquities_naive(RiverComputationMap& map)
+  
+  void computeEquities_naive(TurnComputationMap& map, const TurnEvalMap& turn_evals,
+      const Board& board)
   {
+    for (int p=0; p<2; ++p) {
+      for (size_t i=0; i<TurnRange::sSize; ++i) {
+        Holding holding_i = map.getHolding(i);
+        ComputationUnit& unit_i = map.getValue(i);
+        
+        float numerator = 0.0;
+        float denominator = 0.0;
+        for (int r=0; r<52; ++r) {
+          ps::Card river = ps::Card(r);
+          if (board.contains(river)) continue;
+          ps::PokerEvaluation eval_i = turn_evals.getValue(i).evals[r];
+
+          for (size_t j=0; j<TurnRange::sSize; ++j) {
+            Holding holding_j = map.getHolding(j);
+            const ComputationUnit& unit_j = map.getValue(j);
+            ps::PokerEvaluation eval_j = turn_evals.getValue(j).evals[r];
+            bool intersects = holding_i.intersects(holding_j);
+            
+            float weight = unit_j.weight[1-p];
+
+            numerator += (intersects?0:weight) * 
+              branchless::select(eval_i>eval_j, 1.0, branchless::select(eval_i==eval_j, 0.5, 0.0));
+            
+            denominator += (intersects?0:weight);
+          }
+        }
+        unit_i.equity[p] = numerator / denominator;
+      }
+    }
+  }
+
+  void computeEquities_naive(RiverComputationMap& map) {
     for (int p=0; p<2; ++p) {
       for (size_t i=0; i<RiverRange::sSize; ++i) {
         Holding holding_i = map.getHolding(i);
@@ -34,10 +67,10 @@ namespace rangecalc {
           
           float weight = unit_j.weight[1-p];
 
-          numerator += (intersects?0:1) * weight * 
+          numerator += (intersects?0:weight) * 
             branchless::select(eval_i>eval_j, 1.0, branchless::select(eval_i==eval_j, 0.5, 0.0));
           
-          denominator += (intersects?0:1) * weight;
+          denominator += (intersects?0:weight);
         }
 
         unit_i.equity[p] = numerator / denominator;
