@@ -28,14 +28,14 @@ namespace rangecalc {
         float denominator = 0.0;
         for (int r=0; r<52; ++r) {
           ps::Card river = ps::Card(r);
-          if (board.contains(river)) continue;
+          if ((board.getCards()|holding_i.getCardSet()).contains(river)) continue;
           ps::PokerEvaluation eval_i = turn_evals.getValue(i).evals[r];
 
           for (size_t j=0; j<TurnRange::sSize; ++j) {
             Holding holding_j = map.getHolding(j);
             const ComputationUnit& unit_j = map.getValue(j);
             ps::PokerEvaluation eval_j = turn_evals.getValue(j).evals[r];
-            bool intersects = holding_i.intersects(holding_j);
+            bool intersects = holding_j.intersects(holding_i.getCardSet() | board.getCards());
             
             float weight = unit_j.weight[1-p];
 

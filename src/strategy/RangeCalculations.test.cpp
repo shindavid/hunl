@@ -12,7 +12,7 @@ namespace ps = pokerstove;
 
 void turn_test() {
   ps::HoldemHandEvaluator evaluator;
-  for (int i=0; i<5; ++i) {
+  for (int i=0; i<2; ++i) {
     PreflopRange preflop_range;
     rangecalc::init_uniform(preflop_range);
 
@@ -137,7 +137,7 @@ void river_test() {
     river_comp_naive.sort(PrintCompare);
     river_comp_smart.sort(PrintCompare);
 
-    fprintf(stdout, "naive        | smart\n");
+    fprintf(stdout, "naive         | smart\n");
     for (int j=0; j<RiverRange::sSize; ++j) {
       Holding holding_naive = river_comp_naive.getHolding(j);
       Holding holding_smart = river_comp_smart.getHolding(j);
