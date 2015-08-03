@@ -89,7 +89,7 @@ void turn_test() {
       Holding holding_smart = turn_comp_smart.getHolding(j);
       float naive_equity = turn_comp_naive.getValue(j).equity[0];
       float smart_equity = turn_comp_smart.getValue(j).equity[0];
-      //assert(approximately_equal(naive_equity, smart_equity));
+      assert(approximately_equal(naive_equity, smart_equity));
       fprintf(stdout, "%.6f %s | %.6f %s\n", naive_equity, holding_naive.str().c_str(), smart_equity,
           holding_smart.str().c_str());
     }
