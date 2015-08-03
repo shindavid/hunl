@@ -35,7 +35,8 @@ namespace rangecalc {
             Holding holding_j = map.getHolding(j);
             const ComputationUnit& unit_j = map.getValue(j);
             ps::PokerEvaluation eval_j = turn_evals.getValue(j).evals[r];
-            bool intersects = holding_j.intersects(holding_i.getCardSet() | board.getCards());
+            bool intersects = holding_j.intersects(holding_i.getCardSet() | board.getCards()) ||
+              holding_j.contains(river);
             
             float weight = unit_j.weight[1-p];
 
@@ -50,6 +51,47 @@ namespace rangecalc {
     }
   }
 
+  void computeTurnEquityMatrix(TurnEquityMatrix& matrix, const Board& board, const TurnEvalMap& evals)
+  {
+    /*
+     * TODO(dshin) matrix.I is symmetric along diagonal, matrix.M is pseudo-symmetric along diagonal.
+     *
+     * So just compute half of the matrix, and then do a pseudo-reflection across the diagonal.
+     */
+    for (size_t i=0; i<TurnRange::sSize; ++i) {
+      Holding holding_i = evals.getHolding(i);
+      for (size_t j=0; j<TurnRange::sSize; ++j) {
+        Holding holding_j = evals.getHolding(j);
+        bool intersects = holding_j.intersects(holding_i);
+        if (intersects) {
+          matrix.I(i,j) = 0.0;
+          matrix.M(i,j) = 0.0;
+          continue;
+        }
+
+        int counts[3] = {};  // loss/tie/win
+        for (int r=0; r<52; ++r) {
+          ps::Card river = ps::Card(r);
+          ps::CardSet used_cards = holding_i.getCardSet() | holding_j.getCardSet() | board.getCards();
+          if (used_cards.contains(river)) continue;
+          
+          ps::PokerEvaluation eval_i = evals.getValue(i).evals[r];
+          ps::PokerEvaluation eval_j = evals.getValue(j).evals[r];
+
+          counts[cmp(eval_i, eval_j)] += 1;
+        }
+        
+        matrix.M(i,j) = ((float)counts[1]+2*counts[2])/(2*(counts[0]+counts[1]+counts[2]));
+        matrix.I(i,j) = 1.0;
+        
+        /*
+        fprintf(stdout, "%s %s L:%d T:%d W:%d\n", holding_i.str().c_str(), holding_j.str().c_str(),
+            counts[0], counts[1], counts[2]);
+            */
+      }
+    }
+  }
+  
   void computeEquities_naive(RiverComputationMap& map) {
     for (int p=0; p<2; ++p) {
       for (size_t i=0; i<RiverRange::sSize; ++i) {

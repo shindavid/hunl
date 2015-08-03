@@ -1,3 +1,4 @@
+#include "strategy/EquityMatrix.h"
 #include "strategy/JointHoldingDistribution.h"
 #include "strategy/Range.h"
 
@@ -29,6 +30,8 @@ struct PrintCompare2_t {
 namespace rangecalc {
   void init_uniform(PreflopRange& range);
 
+  void computeTurnEquityMatrix(TurnEquityMatrix& matrix, const Board& board, const TurnEvalMap& evals);
+
   /*
    * Sets equity values for each item in map.
    *
@@ -38,6 +41,11 @@ namespace rangecalc {
    * assumption in the future by applying a joint distribution estimation algorithm like Gibb's
    * sampling. My personal feeling is that the assumption is mild enough to not have a serious impact
    * on the computations.
+   *
+   * ADDENDUM(dshin): On the other hand, there are faster algo's than Gibb's that probably work
+   * decently enough here. Can compute a probability weight per-card for each player from the range
+   * weights, and then maybe estimate that the probability weight of that card from the deck is 
+   * proportional to (1-w0)*(1-w1). Later, can try to retrofit algo's to use this approximation.
    */
   void computeEquities_naive(RiverComputationMap& map, const TurnEvalMap& turn_evals,
       const Board& board);

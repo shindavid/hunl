@@ -12,7 +12,7 @@ namespace ps = pokerstove;
 
 void turn_test() {
   ps::HoldemHandEvaluator evaluator;
-  for (int i=0; i<2; ++i) {
+  for (int i=0; i<10; ++i) {
     PreflopRange preflop_range;
     rangecalc::init_uniform(preflop_range);
 
@@ -30,6 +30,7 @@ void turn_test() {
     TurnComputationMap turn_comp_naive(turn_range);
     TurnComputationMap turn_comp_smart(turn_range);
     TurnEvalMap turn_evals(turn_range);
+    TurnEquityMatrix equity_matrix;
     
     for (size_t j=0; j<TurnRange::sSize; ++j) {
       for (int w=0; w<2; ++w) {
@@ -37,6 +38,7 @@ void turn_test() {
         turn_comp_smart.getValue(j).weight[w] = 1.0;
       }
     }
+    //turn_comp_smart.normalizeWeights();
 
     Clock::time_point t0 = Clock::now();
     for (int r=0; r<52; ++r) {
@@ -58,25 +60,38 @@ void turn_test() {
     Clock::time_point t1 = Clock::now();
     rangecalc::computeEquities_naive(turn_comp_naive, turn_evals, board);
     Clock::time_point t2 = Clock::now();
+    rangecalc::computeTurnEquityMatrix(equity_matrix, board, turn_evals);
+    Clock::time_point t3 = Clock::now();
+    equity_matrix.compute(turn_comp_smart);
+    Clock::time_point t4 = Clock::now();
     
     nanoseconds elapsed01 = std::chrono::duration_cast<nanoseconds>(t1-t0);
     nanoseconds elapsed12 = std::chrono::duration_cast<nanoseconds>(t2-t1);
+    nanoseconds elapsed23 = std::chrono::duration_cast<nanoseconds>(t3-t2);
+    nanoseconds elapsed34 = std::chrono::duration_cast<nanoseconds>(t4-t3);
     
     fprintf(stdout, "RangeCalculation turn test #%d\n", i);
     fprintf(stdout, "hand eval: %.fus\n", (double)(0.001*elapsed01.count()));
     fprintf(stdout, "naive equity calc: %.fus\n", (double)(0.001*elapsed12.count()));
+    fprintf(stdout, "equity matrix calc: %.fus\n", (double)(0.001*elapsed23.count()));
+    fprintf(stdout, "smart equity calc: %.fus\n", (double)(0.001*elapsed34.count()));
 
     fprintf(stdout, "Board [%s %s %s %s]\n",
         board.getCard(0).str().c_str(), board.getCard(1).str().c_str(), board.getCard(2).str().c_str(),
         board.getCard(3).str().c_str());
 
     turn_comp_naive.sort(PrintCompare2);
+    turn_comp_smart.sort(PrintCompare2);
 
-    fprintf(stdout, "naive\n");
+    fprintf(stdout, "naive         | smart\n");
     for (int j=0; j<TurnRange::sSize; ++j) {
       Holding holding_naive = turn_comp_naive.getHolding(j);
+      Holding holding_smart = turn_comp_smart.getHolding(j);
       float naive_equity = turn_comp_naive.getValue(j).equity[0];
-      fprintf(stdout, "%.6f %s\n", naive_equity, holding_naive.str().c_str());
+      float smart_equity = turn_comp_smart.getValue(j).equity[0];
+      //assert(approximately_equal(naive_equity, smart_equity));
+      fprintf(stdout, "%.6f %s | %.6f %s\n", naive_equity, holding_naive.str().c_str(), smart_equity,
+          holding_smart.str().c_str());
     }
   }
 }
@@ -153,7 +168,7 @@ void river_test() {
 int main() {
   srand(100);
 
-  river_test();
+  //river_test();
   turn_test();
   
   return 0;

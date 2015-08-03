@@ -36,6 +36,13 @@ public:
   const T& getValue(int i) const { return _units[i].t; }
   T& getValue(int i) { return _units[i].t; }
   void setValue(int i, const T& t) { _units[i].t = t; }
+ 
+  /*
+   * Only callable if T has:
+   *
+   * float weight[2];
+   */
+  void normalizeWeights();
   
   template <class Compare> void sort(Compare comp) { std::sort(_units, &_units[tSize], comp); }
 

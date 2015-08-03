@@ -1,5 +1,5 @@
 
-template<int N> EquityMatrix<N>::EquityMatrix() : _M(N, N), _W(N, 2), _P(N, 2) {}
+template<int N> EquityMatrix<N>::EquityMatrix() : _M(N, N), _I(N,N), _W(N, 2), _E(N, 2) {}
 
 template<int N> template<typename T>
 void EquityMatrix<N>::compute(HoldingMap<N,T>& map) {
@@ -13,12 +13,17 @@ void EquityMatrix<N>::compute(HoldingMap<N,T>& map) {
     }
   }
 
-  _P = _M * W;
-  
-  // See above TODO comment.
+  // TODO: if _I is switched to a bit-matrix, then the element-wise division here might need a little
+  // vectorization work.
+  _E = (_M*_W).cwiseQuotient(_I*_W) ;
+
+  /*
+   * TODO(dshin) The order of for-loops here is optimized for cache-write access, but not for
+   * cache-read access. There might be a better way to do this if we dig into the Eigen API.
+   */
   for (int p=0; p<2; ++p) {
     for (int i=0; i<N; ++i) {
-      map.getValue(i).equity[p] = _P(i,p);
+      map.getValue(i).equity[p] = _E(i,p);
     }
   }
 }

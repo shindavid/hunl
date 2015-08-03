@@ -1,4 +1,4 @@
-
+#pragma once
 
 struct branchless {
   template<typename T> static T select(bool pred, T a, T b) {
@@ -18,3 +18,11 @@ struct branchless {
   }
   */
 } ;
+
+/*
+ * Returns {0,1,2} if {a<b, a==b, a>b}.
+ */
+template<typename T> int cmp(T a, T b) {
+  return branchless::select(a<b, 0, branchless::select(a==b, 1, 2));
+}
+

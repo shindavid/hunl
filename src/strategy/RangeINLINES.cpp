@@ -1,4 +1,22 @@
 
+template <size_t tSize, typename T> 
+void HoldingMap<tSize,T>::normalizeWeights() {
+  float sum[2] = {};
+  // TODO: vectorize
+  for (size_t i=0; i<tSize; ++i) {
+    sum[0] += _units[i].t.weight[0];
+    sum[1] += _units[i].t.weight[1];
+  }
+
+  float inv_sum[2] = {1.0f/sum[0], 1.0f/sum[1]};
+
+  // TODO: vectorize
+  for (size_t i=0; i<tSize; ++i) {
+    _units[i].t.weight[0] *= inv_sum[0];
+    _units[i].t.weight[1] *= inv_sum[1];
+  }
+}
+
 template <size_t tSize, typename T> template <typename T2>
 void HoldingMap<tSize,T>::relabel(HoldingMap<tSize,T2>& map) const {
   for (size_t i=0; i<tSize; ++i) map.setHolding(i, _units[i].holding);
