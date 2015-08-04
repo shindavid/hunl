@@ -8,10 +8,6 @@
 #include "strategy/Range.h"
 #include <Eigen/Core>
 
-#ifndef EIGEN_VECTORIZE
-CRASH
-#endif
-
 using namespace Eigen;
 
 template<int N> class EquityMatrix {
